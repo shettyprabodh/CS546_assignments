@@ -43,6 +43,8 @@ public class Crawler{
 
           this.documents.add(new Document(play_id, scene_id, tokenized_text, scene_num));
         }
+
+        System.out.println(this.documents.get(0));
     } catch (FileNotFoundException e) {
         e.printStackTrace();
     } catch (IOException e) {

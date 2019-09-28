@@ -9,8 +9,15 @@ class InvertedIndex{
     this.raw_data = documents;
   }
 
-  public void index_data(){
+  public void create_index(){
+    if(this.raw_data == null){
+      System.out.println("No raw data present. Exiting.");
+      System.exit(1);
+    }
 
+    for(int i=0; i<documents.size(); i++){
+      Document current_doc = documents.get(i);
+    }
   }
 
 
