@@ -5,9 +5,9 @@ public class Document{
   String scene_id = "";
   String[] terms = null;
   long scene_num = 0;
-  long doc_id = 0;
+  Integer doc_id = 0;
 
-  Document(String play_id, String scene_id, String[] tokenized_text, long scene_num, long doc_id){
+  Document(String play_id, String scene_id, String[] tokenized_text, long scene_num, Integer doc_id){
     this.play_id = play_id;
     this.scene_id = scene_id;
     this.terms = tokenized_text;

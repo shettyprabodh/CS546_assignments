@@ -1,19 +1,26 @@
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.Enumeration;
+import java.util.*;
+import java.nio.*;
+import java.io.*;
 
 public class InvertedIndex{
   ArrayList<Document> raw_data = null;
   Hashtable<String, InvertedList> index = null;
   boolean is_delta_encoded = false;
+  ArrayList<Integer> encoded_index = null;
+
+  String index_file_name = null;
+  RandomAccessFile writer = null;
   // compressed_data = {}
 
-  InvertedIndex(ArrayList<Document> documents){
+  InvertedIndex(ArrayList<Document> documents, String index_file_name){
     this.raw_data = documents;
     this.index = new Hashtable<String, InvertedList>();
+    this.is_delta_encoded = false;
+    this.encoded_index = new ArrayList<Integer>();
+    this.index_file_name = index_file_name;
   }
 
-  public void create_index(){
+  public void createIndex(){
     if(this.raw_data == null){
       System.out.println("No raw data present. Exiting.");
       System.exit(1);
@@ -37,32 +44,73 @@ public class InvertedIndex{
         }
 
         // Add posting
-        correct_inverted_list.add_posting(current_doc.doc_id, term_position);
+        correct_inverted_list.addPosting(current_doc.doc_id, term_position);
       }
     }
   }
 
-  @Override
-  public String toString(){
-    String result = "";
+  // Delta encoding
+  public void deltaEncode(){
+    if(this.index == null){
+      System.out.println("Index doesn't exist. Please create one and then compress. Exiting.");
+      System.exit(1);
+    }
 
-    result += ("Displaying index:\n" + index.toString());
-    result += "\n";
-
-    return result;
+    Set<String> terms = this.index.keySet();
+    for(String term: terms){
+      InvertedList current_inverted_list = this.index.get(term);
+      current_inverted_list.deltaEncodePostings();
+    }
+    this.is_delta_encoded = true;
   }
 
-  // Writing to disk functions
-  public void compress(){
-
+  private void setWriter(){
+    try{
+      this.writer = new RandomAccessFile(this.index_file_name, "rw");
+    }
+    catch (FileNotFoundException e){
+      System.out.println(e);
+    }
   }
 
-  public void Encode(){
-    // Internally uses Encoder object
+  private void closeWriter(){
+    try{
+      this.writer.close();
+    }
+    catch (IOException e){
+      System.out.println(e);
+    }
   }
 
-  public void Write(){
+  // An array of integers
+  public void flushToDisk(){
+    this.setWriter();
+
+    Set<String> terms = this.index.keySet();
+
+    for(String term: terms){
+      InvertedList current_inverted_list = this.index.get(term);
+      current_inverted_list.flushToDisk(this.writer);
+    }
+
+    // Closing writer
+    this.closeWriter();
+  }
+
+  public void flushLookupTable(){
+    Set<String> terms = this.index.keySet();
+
+    for(String term: terms){
+      InvertedList current_inverted_list = this.index.get(term);
+      System.out.println("Offset for term: " + term + " : " + current_inverted_list.offset + " : " + current_inverted_list.num_bytes);
+    }
+  }
+
+  public void write(){
     // Internally uses writer object. Or it could be a part of encoder
+    this.deltaEncode();
+    this.flushToDisk();
+    this.flushLookupTable();
   }
 
 
@@ -78,6 +126,19 @@ public class InvertedIndex{
 
   public void Decompress(){
     // Returns  fully deompressed Inverted Index object
+  }
+
+
+
+  // Utility functions
+  @Override
+  public String toString(){
+    String result = "";
+
+    result += ("Displaying index:\n" + index.toString());
+    result += "\n";
+
+    return result;
   }
 
 }

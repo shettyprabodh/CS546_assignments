@@ -24,7 +24,7 @@ public class Crawler{
     this.documents = new ArrayList<Document>();
   }
 
-  public void ParseJSON(){
+  public void parseJSON(){
     File temp_file = this.file;
     try
     {
@@ -39,7 +39,7 @@ public class Crawler{
           String play_id = (String) current_document.get("playId");
           String scene_id = (String) current_document.get("sceneId");
           long scene_num = (long) current_document.get("sceneNum");
-          long doc_id = i;
+          Integer doc_id = i;
 
           String[] tokenized_text = text.split(" ");
 

@@ -1,25 +1,32 @@
-import java.util.ArrayList;
+import java.util.*;
 
 public class DocumentPostings{
-  long doc_id = 0;
+  int doc_id = 0;
   boolean is_delta_encoded = false;
-  ArrayList<Long> positions = null;
+  ArrayList<Integer> positions = null;
 
   // Document related meta data
-  long document_term_frequency = 0;
+  int document_term_frequency = 0;
 
-  DocumentPostings(long doc_id){
+  DocumentPostings(int doc_id){
     this.doc_id = doc_id;
     this.is_delta_encoded = false;
-    this.positions = new ArrayList<Long>();
+    this.positions = new ArrayList<Integer>();
     this.document_term_frequency = 0;
   }
 
-  public void add_position(long position){
+  public void addPosition(Integer position){
     this.positions.add(position);
 
     // Update related meta data
     this.document_term_frequency++;
+  }
+
+  public void deltaEncodePositions(){
+    for(int i=1; i<this.positions.size(); i++){
+      this.positions.set(i, this.positions.get(i) - this.positions.get(i-1));
+    }
+    this.is_delta_encoded = true;
   }
 
   @Override
