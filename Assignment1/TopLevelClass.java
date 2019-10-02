@@ -15,6 +15,10 @@ public class TopLevelClass{
 
     shakespeare_index.write();
 
+    System.out.println("====================== Wrote Inverted Index ======================");
+
+    shakespeare_index.read();
+
     System.out.println("Done");
   }
 }

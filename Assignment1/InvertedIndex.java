@@ -10,6 +10,7 @@ public class InvertedIndex{
 
   String index_file_name = null;
   RandomAccessFile writer = null;
+  RandomAccessFile reader = null;
   // compressed_data = {}
 
   InvertedIndex(ArrayList<Document> documents, String index_file_name){
@@ -114,17 +115,35 @@ public class InvertedIndex{
   }
 
 
-
-  // Reading from disk functions
-  public void Read(){
-    // Internally uses reader object. Or it could be a part of decoder
+  private void setReader(){
+    try{
+      this.reader = new RandomAccessFile(this.index_file_name, "rw");
+    }
+    catch (FileNotFoundException e){
+      System.out.println(e);
+    }
   }
 
-  public void Decode(){
+  // Reading from disk functions
+  public void read(){
+    // Internally uses reader object. Or it could be a part of decoder
+    this.setReader();
+
+    // TODO: Need to read this from flushed lookup table
+    Set<String> terms = this.index.keySet();
+
+    for(String term: terms){
+      // TODO: This should create new IL
+      InvertedList current_inverted_list = this.index.get(term);
+      current_inverted_list.reconstructInvertedListFromDisk(reader);
+    }
+  }
+
+  public void decode(){
     // Internally uses Decoder(or Encoder) object
   }
 
-  public void Decompress(){
+  public void decompress(){
     // Returns  fully deompressed Inverted Index object
   }
 

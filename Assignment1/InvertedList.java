@@ -13,6 +13,11 @@ public class InvertedList{
   int term_frequency = 0;
   boolean is_delta_encoded = false;
 
+  // For debugging purposes
+  int[] encoded_list = null;
+  int[] decoded_list = null;
+  static int count = 0;
+
   InvertedList(){
     this.doc_postings = new ArrayList<DocumentPostings>();
     this.term_frequency = 0;
@@ -87,6 +92,26 @@ public class InvertedList{
     return encoded_list;
   }
 
+  private void writeToDisk(int[] encoded_list, RandomAccessFile writer){
+    try{
+      long current_offset = writer.getFilePointer();
+      int num_bytes = (encoded_list.length)*(Integer.BYTES);
+      ByteBuffer byte_buffer = ByteBuffer.allocate(num_bytes);
+      IntBuffer int_buffer = byte_buffer.asIntBuffer();
+      int_buffer.put(encoded_list);
+
+      byte[] b_array = byte_buffer.array();
+      writer.write(b_array);
+
+      this.offset = current_offset;
+      this.num_bytes = (int)(writer.getFilePointer() - current_offset);
+      this.encoded_list = encoded_list;
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
   // To get offset and number_of_bytes, check updated offset and num_bytes
   // Writing to disk in following format [doc_id_1 count_1 positions_1
   // doc_id_2 count_2 positions_2 ....]
@@ -96,24 +121,60 @@ public class InvertedList{
       System.exit(1);
     }
 
+    int[] encoded_list = this.getEncodedList();
+    this.writeToDisk(encoded_list, writer);
+  }
+
+  private byte[] readFromDisk(RandomAccessFile reader){
+    byte[] b_array = new byte[this.num_bytes];
+    int offset = (int)(this.offset);
     try{
-      long current_offset = writer.getFilePointer();
-      int[] encoded_list = this.getEncodedList();
-      System.out.println("============ Encoded list =============="+encoded_list[0]);
-      int num_bytes = (encoded_list.length)*(Integer.BYTES);
-      ByteBuffer byte_buffer = ByteBuffer.allocate(num_bytes);
-      IntBuffer int_buffer = byte_buffer.asIntBuffer();
-      int_buffer.put(encoded_list);
-
-      this.offset = current_offset;
-      this.num_bytes = num_bytes;
-
-      byte[] b_array = byte_buffer.array();
-      writer.write(b_array);
+      reader.seek(offset);
+      reader.read(b_array, 0, this.num_bytes);
     }
     catch(IOException e){
       System.out.println(e);
     }
+
+    return b_array;
+  }
+
+  private int byteArrayToInt(byte[] byte_array){
+    assert(byte_array.length == Integer.BYTES);
+    int shifts = 0; // 2^i bit shifts
+    int result = 0;
+
+    for(int i=Integer.BYTES - 1; i >= 0; i--){
+       // Magic. Without "& 0xFF", we were getting negative numbers in some cases.
+      result = result | ((byte_array[i]&(0xFF))*(1 << shifts));
+      shifts += 8;
+    }
+
+    return result;
+  }
+
+  // TODO: Need to handle v_byte decoding
+  private int[] getDecodedList(byte[] byte_array){
+    int[] decoded_list = new int[this.num_bytes];
+
+    // Uncompressed version
+    int decoded_list_pointer = 0;
+    for(int i=0; i<byte_array.length; i+=4){
+      decoded_list[decoded_list_pointer++] = this.byteArrayToInt(Arrays.copyOfRange(byte_array, i, i+4));
+    }
+
+    return decoded_list;
+  }
+
+  public void reconstructInvertedListFromDisk(RandomAccessFile reader){
+    if(reader == null){
+      System.out.println("No reader found. Exiting.");
+      System.exit(1);
+    }
+    count = 0;
+    byte[] byte_array = this.readFromDisk(reader);
+    int[] decoded_list = this.getDecodedList(byte_array);
+    this.decoded_list = decoded_list;
   }
 
   @Override
@@ -123,6 +184,10 @@ public class InvertedList{
     result += "{ ";
     result += ("term_frequency: " + term_frequency + "\n");
     result += ("doc_postings: " + doc_postings.toString() + "\n");
+    result += ("offset: " + offset + "\n");
+    result += ("num_bytes: " + num_bytes + "\n");
+    result += ("encoded_list: " + encoded_list[0] + "\n");
+    result += ("decoded_list: " + decoded_list[0] + "\n");
     result += "}";
     result += "\n";
 
