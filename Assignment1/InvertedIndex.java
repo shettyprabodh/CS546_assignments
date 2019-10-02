@@ -1,6 +1,7 @@
 import java.util.*;
 import java.nio.*;
 import java.io.*;
+import org.json.simple.*;
 
 public class InvertedIndex{
   ArrayList<Document> raw_data = null;
@@ -9,16 +10,18 @@ public class InvertedIndex{
   ArrayList<Integer> encoded_index = null;
 
   String index_file_name = null;
+  String lookup_table_json_name = null;
   RandomAccessFile writer = null;
   RandomAccessFile reader = null;
   // compressed_data = {}
 
-  InvertedIndex(ArrayList<Document> documents, String index_file_name){
+  InvertedIndex(ArrayList<Document> documents, String index_file_name, String lookup_table_json_name){
     this.raw_data = documents;
     this.index = new Hashtable<String, InvertedList>();
     this.is_delta_encoded = false;
     this.encoded_index = new ArrayList<Integer>();
     this.index_file_name = index_file_name;
+    this.lookup_table_json_name = lookup_table_json_name;
   }
 
   public void createIndex(){
@@ -100,10 +103,24 @@ public class InvertedIndex{
 
   public void flushLookupTable(){
     Set<String> terms = this.index.keySet();
+    JSONObject lookup_table = new JSONObject();
 
     for(String term: terms){
       InvertedList current_inverted_list = this.index.get(term);
-      System.out.println("Offset for term: " + term + " : " + current_inverted_list.offset + " : " + current_inverted_list.num_bytes);
+      JSONObject lookup_table_record = new JSONObject();
+
+      lookup_table_record.put("offset", current_inverted_list.offset);
+      lookup_table_record.put("num_bytes", current_inverted_list.num_bytes);
+
+      lookup_table.put(term, lookup_table_record);
+    }
+
+    try(FileWriter file = new FileWriter(this.lookup_table_json_name)){
+      file.write(lookup_table.toJSONString());
+      file.flush();
+    }
+    catch(IOException e){
+      System.out.println(e);
     }
   }
 
@@ -137,10 +154,6 @@ public class InvertedIndex{
       InvertedList current_inverted_list = this.index.get(term);
       current_inverted_list.reconstructInvertedListFromDisk(reader);
     }
-  }
-
-  public void decode(){
-    // Internally uses Decoder(or Encoder) object
   }
 
   public void decompress(){

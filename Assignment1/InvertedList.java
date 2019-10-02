@@ -145,7 +145,7 @@ public class InvertedList{
     int result = 0;
 
     for(int i=Integer.BYTES - 1; i >= 0; i--){
-       // Magic. Without "& 0xFF", we were getting negative numbers in some cases.
+      // Magic. Without "& 0xFF", we are getting negative numbers in some cases.
       result = result | ((byte_array[i]&(0xFF))*(1 << shifts));
       shifts += 8;
     }
