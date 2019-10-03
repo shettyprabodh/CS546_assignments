@@ -2,12 +2,11 @@ import java.util.*;
 import java.nio.*;
 import java.io.*;
 import org.json.simple.*;
+import org.json.simple.parser.*;
 
 public class InvertedIndex{
   ArrayList<Document> raw_data = null;
   Hashtable<String, InvertedList> index = null;
-  boolean is_delta_encoded = false;
-  ArrayList<Integer> encoded_index = null;
 
   String index_file_name = null;
   String lookup_table_json_name = null;
@@ -18,8 +17,13 @@ public class InvertedIndex{
   InvertedIndex(ArrayList<Document> documents, String index_file_name, String lookup_table_json_name){
     this.raw_data = documents;
     this.index = new Hashtable<String, InvertedList>();
-    this.is_delta_encoded = false;
-    this.encoded_index = new ArrayList<Integer>();
+    this.index_file_name = index_file_name;
+    this.lookup_table_json_name = lookup_table_json_name;
+  }
+
+  InvertedIndex(String index_file_name, String lookup_table_json_name){
+    this.raw_data = null;
+    this.index = new Hashtable<String, InvertedList>();
     this.index_file_name = index_file_name;
     this.lookup_table_json_name = lookup_table_json_name;
   }
@@ -53,21 +57,6 @@ public class InvertedIndex{
     }
   }
 
-  // Delta encoding
-  public void deltaEncode(){
-    if(this.index == null){
-      System.out.println("Index doesn't exist. Please create one and then compress. Exiting.");
-      System.exit(1);
-    }
-
-    Set<String> terms = this.index.keySet();
-    for(String term: terms){
-      InvertedList current_inverted_list = this.index.get(term);
-      current_inverted_list.deltaEncodePostings();
-    }
-    this.is_delta_encoded = true;
-  }
-
   private void setWriter(){
     try{
       this.writer = new RandomAccessFile(this.index_file_name, "rw");
@@ -94,7 +83,8 @@ public class InvertedIndex{
 
     for(String term: terms){
       InvertedList current_inverted_list = this.index.get(term);
-      current_inverted_list.flushToDisk(this.writer);
+      // TODO: Update is_compression_required here
+      current_inverted_list.flushToDisk(this.writer, false);
     }
 
     // Closing writer
@@ -111,6 +101,9 @@ public class InvertedIndex{
 
       lookup_table_record.put("offset", current_inverted_list.offset);
       lookup_table_record.put("num_bytes", current_inverted_list.num_bytes);
+      lookup_table_record.put("is_delta_encoded", current_inverted_list.is_delta_encoded);
+      lookup_table_record.put("is_v_byte_compressed", current_inverted_list.is_v_byte_compressed);
+
 
       lookup_table.put(term, lookup_table_record);
     }
@@ -126,7 +119,6 @@ public class InvertedIndex{
 
   public void write(){
     // Internally uses writer object. Or it could be a part of encoder
-    this.deltaEncode();
     this.flushToDisk();
     this.flushLookupTable();
   }
@@ -137,6 +129,38 @@ public class InvertedIndex{
       this.reader = new RandomAccessFile(this.index_file_name, "rw");
     }
     catch (FileNotFoundException e){
+      System.out.println(e);
+    }
+  }
+
+  // First step before querying. Loading the lookup table
+  public void loadLookupTable(){
+    try{
+      FileReader file = new FileReader(this.lookup_table_json_name);
+      JSONParser parser = new JSONParser();
+      JSONObject lookup_table = (JSONObject) parser.parse(file);
+
+      // Recreate InvertedIndex without postings, just the meta-data
+      Set<String> terms = lookup_table.keySet();
+
+      for(String term: terms){
+        JSONObject current_inverted_list_data = (JSONObject) lookup_table.get(term);
+        int temp = ((Long)current_inverted_list_data.get("num_bytes")).intValue();
+        // System.out.println(temp.getClass().getSimpleName());
+        long offset = (long) current_inverted_list_data.get("offset");
+        int num_bytes = ((Long)current_inverted_list_data.get("num_bytes")).intValue();
+        boolean is_delta_encoded = (boolean) current_inverted_list_data.get("is_delta_encoded");
+        boolean is_v_byte_compressed = (boolean) current_inverted_list_data.get("is_v_byte_compressed");
+
+        // Partial because postings list is not loaded
+        InvertedList partial_inverted_list = new InvertedList(offset, (int)num_bytes, is_delta_encoded, is_v_byte_compressed);
+        this.index.put(term, partial_inverted_list);
+      }
+    }
+    catch(ParseException e){
+      System.out.println(e);
+    }
+    catch(IOException e){
       System.out.println(e);
     }
   }
@@ -155,11 +179,6 @@ public class InvertedIndex{
       current_inverted_list.reconstructInvertedListFromDisk(reader);
     }
   }
-
-  public void decompress(){
-    // Returns  fully deompressed Inverted Index object
-  }
-
 
 
   // Utility functions

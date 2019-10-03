@@ -2,6 +2,9 @@ import java.util.*;
 import java.nio.*;
 import java.io.*;
 
+// More or less a lookup_table along with postings list.
+// Whenever the lookup table is loaded, except for
+// doc_postings everything is loaded.
 public class InvertedList{
   ArrayList<DocumentPostings> doc_postings = null;
 
@@ -12,6 +15,8 @@ public class InvertedList{
   // Term related meta data
   int term_frequency = 0;
   boolean is_delta_encoded = false;
+  boolean is_v_byte_compressed = false;
+  boolean are_postings_loaded = false;
 
   // For debugging purposes
   int[] encoded_list = null;
@@ -24,6 +29,17 @@ public class InvertedList{
     this.offset = 0;
     this.num_bytes = 0;
     this.is_delta_encoded = false;
+    this.are_postings_loaded = false;
+  }
+
+  InvertedList(long offset, int num_bytes, boolean is_delta_encoded, boolean is_v_byte_compressed){
+    this.doc_postings = new ArrayList<DocumentPostings>();
+    // Will be updated whenever postings list is loaded
+    this.term_frequency = 0;
+    this.offset = offset;
+    this.num_bytes = num_bytes;
+    this.is_delta_encoded = is_delta_encoded;
+    this.are_postings_loaded = is_v_byte_compressed;
   }
 
   public void addPosting(Integer doc_id, Integer position){
@@ -48,10 +64,11 @@ public class InvertedList{
 
     // Update meta data
     this.term_frequency++;
+    this.are_postings_loaded = true;
   }
 
   // NOTE: Did not delta encode doc_ids list
-  public void deltaEncodePostings(){
+  private void deltaEncodePostings(){
     for(int i=0; i<this.doc_postings.size(); i++){
       DocumentPostings current_doc_postings = this.doc_postings.get(i);
       current_doc_postings.deltaEncodePositions();
@@ -72,8 +89,12 @@ public class InvertedList{
   }
 
   // TODO: Need to complete v_byte compression
-  private int[] getEncodedList(){
+  private int[] getEncodedList(boolean is_compression_required){
     int[] encoded_list = new int[this.getEncodedListSize()];
+
+    if(is_compression_required){
+      this.deltaEncodePostings();
+    }
 
     int encoded_list_pointer = 0;
     for(int i=0; i<this.doc_postings.size(); i++){
@@ -115,13 +136,13 @@ public class InvertedList{
   // To get offset and number_of_bytes, check updated offset and num_bytes
   // Writing to disk in following format [doc_id_1 count_1 positions_1
   // doc_id_2 count_2 positions_2 ....]
-  public void flushToDisk(RandomAccessFile writer){
+  public void flushToDisk(RandomAccessFile writer, boolean is_compression_required){
     if(writer == null){
       System.out.println("No writer found. Exiting.");
       System.exit(1);
     }
 
-    int[] encoded_list = this.getEncodedList();
+    int[] encoded_list = this.getEncodedList(is_compression_required);
     this.writeToDisk(encoded_list, writer);
   }
 
@@ -186,8 +207,8 @@ public class InvertedList{
     result += ("doc_postings: " + doc_postings.toString() + "\n");
     result += ("offset: " + offset + "\n");
     result += ("num_bytes: " + num_bytes + "\n");
-    result += ("encoded_list: " + encoded_list[0] + "\n");
-    result += ("decoded_list: " + decoded_list[0] + "\n");
+    // result += ("encoded_list: " + encoded_list[0] + "\n");
+    // result += ("decoded_list: " + decoded_list[0] + "\n");
     result += "}";
     result += "\n";
 

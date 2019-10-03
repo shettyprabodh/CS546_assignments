@@ -16,8 +16,13 @@ public class TopLevelClass{
     shakespeare_index.write();
 
     System.out.println("====================== Wrote Inverted Index ======================");
+    // Assume "delete shakespeare_index" here
+    // shakespeare_index.read();
+    InvertedIndex new_shakespeare_index = new InvertedIndex("index.bin", "lookup_table.json");
 
-    shakespeare_index.read();
+    new_shakespeare_index.loadLookupTable();
+
+    System.out.println("====================== Lookup table loaded ======================");
 
     System.out.println("Done");
   }

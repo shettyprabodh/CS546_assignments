@@ -15,6 +15,14 @@ public class DocumentPostings{
     this.document_term_frequency = 0;
   }
 
+  // Will be used while reading II from disk
+  DocumentPostings(int doc_id, boolean is_delta_encoded, ArrayList<Integer> positions){
+    this.doc_id = doc_id;
+    this.is_delta_encoded = false;
+    this.positions = positions;
+    this.document_term_frequency = this.positions.size();
+  }
+
   public void addPosition(Integer position){
     this.positions.add(position);
 
