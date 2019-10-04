@@ -165,21 +165,18 @@ public class InvertedIndex{
     }
   }
 
-  // Reading from disk functions
-  public void read(){
-    // Internally uses reader object. Or it could be a part of decoder
-    this.setReader();
 
-    // TODO: Need to read this from flushed lookup table
+  // Builds whole index from disk. rebuildIndex and createIndex are the
+  // only two methods used to create whole index.
+  public void rebuildIndex(){
+    this.setReader();
     Set<String> terms = this.index.keySet();
 
     for(String term: terms){
-      // TODO: This should create new IL
       InvertedList current_inverted_list = this.index.get(term);
-      current_inverted_list.reconstructInvertedListFromDisk(reader);
+      current_inverted_list.reconstructFromDisk(reader);
     }
   }
-
 
   // Utility functions
   @Override

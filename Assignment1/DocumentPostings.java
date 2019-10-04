@@ -16,6 +16,7 @@ public class DocumentPostings{
   }
 
   // Will be used while reading II from disk
+  // TODO: is_delta_encoded needed?
   DocumentPostings(int doc_id, boolean is_delta_encoded, ArrayList<Integer> positions){
     this.doc_id = doc_id;
     this.is_delta_encoded = false;

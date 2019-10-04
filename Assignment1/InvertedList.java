@@ -20,8 +20,7 @@ public class InvertedList{
 
   // For debugging purposes
   int[] encoded_list = null;
-  int[] decoded_list = null;
-  static int count = 0;
+  ArrayList<Integer> decoded_list = null;
 
   InvertedList(){
     this.doc_postings = new ArrayList<DocumentPostings>();
@@ -148,7 +147,7 @@ public class InvertedList{
 
   private byte[] readFromDisk(RandomAccessFile reader){
     byte[] b_array = new byte[this.num_bytes];
-    int offset = (int)(this.offset);
+    long offset = this.offset;
     try{
       reader.seek(offset);
       reader.read(b_array, 0, this.num_bytes);
@@ -175,27 +174,49 @@ public class InvertedList{
   }
 
   // TODO: Need to handle v_byte decoding
-  private int[] getDecodedList(byte[] byte_array){
-    int[] decoded_list = new int[this.num_bytes];
+  // int[] needs size before hand. Since calculating it is a bit pain,
+  // I am using ArrayList instead.
+  private ArrayList<Integer> getDecodedList(byte[] byte_array){
+    ArrayList<Integer> decoded_list = new ArrayList<Integer>();
 
     // Uncompressed version
     int decoded_list_pointer = 0;
     for(int i=0; i<byte_array.length; i+=4){
-      decoded_list[decoded_list_pointer++] = this.byteArrayToInt(Arrays.copyOfRange(byte_array, i, i+4));
+      decoded_list.add(this.byteArrayToInt(Arrays.copyOfRange(byte_array, i, i+4)));
     }
 
     return decoded_list;
   }
 
-  public void reconstructInvertedListFromDisk(RandomAccessFile reader){
+  // Decode list format [doc_id dtf positions ...]
+  private void reconstructDocumentPostings(ArrayList<Integer> decoded_list){
+    int decoded_list_pointer = 0;
+    // System.out.println("Offset: " + this.offset);
+    while(decoded_list_pointer<decoded_list.size()){
+      // System.out.println(decoded_list[decoded_list_pointer]);
+      int doc_id = decoded_list.get(decoded_list_pointer++);
+      int dtf = decoded_list.get(decoded_list_pointer++);
+      ArrayList<Integer> positions = new ArrayList<Integer>();
+
+      for(int i=0; i<dtf; i++){
+        positions.add(decoded_list.get(decoded_list_pointer++));
+      }
+
+      DocumentPostings current_doc_postings = new DocumentPostings(doc_id, false, positions);
+      this.doc_postings.add(current_doc_postings);
+      this.term_frequency += dtf;
+    }
+  }
+
+  public void reconstructFromDisk(RandomAccessFile reader){
     if(reader == null){
       System.out.println("No reader found. Exiting.");
       System.exit(1);
     }
-    count = 0;
     byte[] byte_array = this.readFromDisk(reader);
-    int[] decoded_list = this.getDecodedList(byte_array);
+    ArrayList<Integer> decoded_list = this.getDecodedList(byte_array);
     this.decoded_list = decoded_list;
+    this.reconstructDocumentPostings(decoded_list);
   }
 
   @Override
@@ -208,7 +229,8 @@ public class InvertedList{
     result += ("offset: " + offset + "\n");
     result += ("num_bytes: " + num_bytes + "\n");
     // result += ("encoded_list: " + encoded_list[0] + "\n");
-    // result += ("decoded_list: " + decoded_list[0] + "\n");
+    // result += ("decoded_list: " + Arrays.toString(decoded_list.toArray()) + "\n");
+    // result += ("decoded_list_length: " + decoded_list.size() + "\n");
     result += "}";
     result += "\n";
 

@@ -24,6 +24,12 @@ public class TopLevelClass{
 
     System.out.println("====================== Lookup table loaded ======================");
 
+    new_shakespeare_index.rebuildIndex();
+
+    System.out.println("====================== Index rebuilt ======================");
+
+    System.out.println(new_shakespeare_index);
+
     System.out.println("Done");
   }
 }
