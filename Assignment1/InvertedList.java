@@ -277,10 +277,11 @@ public class InvertedList{
 
     // Because doc_ids are ordered, using binary search.
     int start_pointer = 0;
-    int end_pointer = this.postings.size();
-    int mid_pointer = (start_pointer + end_pointer) / 2;
+    int end_pointer = this.postings.size() - 1;
+    int mid_pointer = 0;
 
-    while(start_pointer < end_pointer){
+    while(start_pointer <= end_pointer){
+      mid_pointer = (start_pointer + end_pointer) / 2;
       DocumentPostings mid_postings = this.postings.get(mid_pointer);
       if(mid_postings.getDocId() == doc_id){
         return mid_postings;
@@ -295,15 +296,28 @@ public class InvertedList{
     return null;
   }
 
+  // Get score corresponding to given term(i.e this InvertedList) and doc_id.
+  // If doc_id doesn't exist return 0
+  // Scoring: Count based
+  public Integer getDocumentWiseScore(int doc_id, RandomAccessFile reader){
+    if(!this.arePostingsLoaded()){
+      this.reconstructPostingsFromDisk(reader);
+    }
+
+    DocumentPostings doc_postings = this.getPostingsListByDocID(doc_id);
+    return (doc_postings != null) ? doc_postings.getDocumentTermFrequency() : 0;
+  }
+
   // term-at-a-time based querying
   // Returns ArrayList of scores of the form [doc_id_1 score_1 doc_id_2 score_2 ...]
   // Scoring: Count based
-  public ArrayList<Integer> getDocumentWiseScores(){
+  public ArrayList<Integer> getDocumentWiseScores(RandomAccessFile reader){
     ArrayList<Integer> document_scores = new ArrayList<Integer>();
 
     // Postings list not loaded. Load it first.
     if(!this.arePostingsLoaded()){
-      System.out.println("Postings list has not been read. Use reconstructPostingsFromDisk first");
+      this.reconstructPostingsFromDisk(reader);
+      // System.out.println("Postings list has not been read. Use reconstructPostingsFromDisk first");
       // throw new PostingsListNotLoadedException("Postings list has not been read. Use reconstructPostingsFromDisk first");
     }
 

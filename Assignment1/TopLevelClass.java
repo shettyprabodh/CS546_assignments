@@ -1,4 +1,5 @@
 import exceptions.*;
+import java.util.*;
 
 public class TopLevelClass{
   public static void main(String[] args){
@@ -9,7 +10,7 @@ public class TopLevelClass{
 
     System.out.println("====================== Parsing JSON done ======================");
 
-    InvertedIndex shakespeare_index = new InvertedIndex(document_crawler.documents, "index.bin", "lookup_table.json");
+    InvertedIndex shakespeare_index = new InvertedIndex(document_crawler.documents, "index.bin", "lookup_table.json", "data_statistics.json");
     shakespeare_index.createIndex();
 
     System.out.println("====================== Created Inverted Index ======================");
@@ -20,7 +21,7 @@ public class TopLevelClass{
     System.out.println("====================== Wrote Inverted Index ======================");
     // Assume "delete shakespeare_index" here
     // shakespeare_index.read();
-    InvertedIndex new_shakespeare_index = new InvertedIndex("index.bin", "lookup_table.json");
+    InvertedIndex new_shakespeare_index = new InvertedIndex("index.bin", "lookup_table.json", "data_statistics.json");
 
     new_shakespeare_index.loadLookupTable();
 
@@ -31,7 +32,7 @@ public class TopLevelClass{
     // System.out.println("====================== Index rebuilt ======================");
 
     // System.out.println(new_shakespeare_index);
-    new_shakespeare_index.getScores("the frolic cern");
+    System.out.println(Arrays.toString(new_shakespeare_index.getScores("the frolic cern", 10).toArray()));
 
     System.out.println("====================== Querying done ======================");
 
