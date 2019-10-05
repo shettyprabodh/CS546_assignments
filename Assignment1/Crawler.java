@@ -16,12 +16,14 @@ public class Crawler{
   FileReader reader = null;
   File file = null;
   ArrayList<Document> documents = null;
+  Tokenizer tokenizer = null;
 
   Crawler(String file_name){
     this.file_name = file_name;
     this.file = new File(file_name);
     this.parser = new JSONParser();
     this.documents = new ArrayList<Document>();
+    this.tokenizer = new Tokenizer();
   }
 
   public void parseJSON(){
@@ -41,7 +43,7 @@ public class Crawler{
           long scene_num = (long) current_document.get("sceneNum");
           Integer doc_id = i;
 
-          String[] tokenized_text = text.split(" ");
+          String[] tokenized_text = this.tokenizer.splitOnSpaces(text);
 
           this.documents.add(new Document(play_id, scene_id, tokenized_text, scene_num, doc_id));
         }

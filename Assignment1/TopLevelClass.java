@@ -1,3 +1,5 @@
+import exceptions.*;
+
 public class TopLevelClass{
   public static void main(String[] args){
     String file_name = "shakespeare-scenes.json";
@@ -24,11 +26,14 @@ public class TopLevelClass{
 
     System.out.println("====================== Lookup table loaded ======================");
 
-    new_shakespeare_index.rebuildIndex();
+    // new_shakespeare_index.rebuildIndex();
+    //
+    // System.out.println("====================== Index rebuilt ======================");
 
-    System.out.println("====================== Index rebuilt ======================");
+    // System.out.println(new_shakespeare_index);
+    new_shakespeare_index.getScores("the frolic cern");
 
-    System.out.println(new_shakespeare_index);
+    System.out.println("====================== Querying done ======================");
 
     System.out.println("Done");
   }

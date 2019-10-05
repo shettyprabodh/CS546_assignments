@@ -1,14 +1,15 @@
 import java.util.*;
 import java.nio.*;
 import java.io.*;
+import exceptions.*;
 
 // More or less a lookup_table along with postings list.
 // Whenever the lookup table is loaded, except for
 // postings everything is loaded.
 public class InvertedList{
-  ArrayList<DocumentPostings> postings = null;
-  // If this is set to null, then postings are not loaded.
+  private ArrayList<DocumentPostings> postings = null;
   private int current_postings_pointer = 0;
+  private boolean are_postings_loaded = false;
 
   // Lookup table params
   long offset = 0;
@@ -27,6 +28,7 @@ public class InvertedList{
     this.term_frequency = 0;
     this.offset = 0;
     this.num_bytes = 0;
+    this.are_postings_loaded = false;
   }
 
   InvertedList(long offset, int num_bytes){
@@ -36,6 +38,7 @@ public class InvertedList{
     this.term_frequency = 0;
     this.offset = offset;
     this.num_bytes = num_bytes;
+    this.are_postings_loaded = false;
   }
 
   // Reason for not using current_postings_pointer is because, if
@@ -51,7 +54,7 @@ public class InvertedList{
     // TODO: Can be improved using HashSet or using the ordering of doc_ids
     for(int i=0; i<this.postings.size(); i++){
       DocumentPostings doc_postings = this.postings.get(i);
-      if(doc_postings.doc_id == doc_id){
+      if(doc_postings.getDocId() == doc_id){
         correct_doc_postings = doc_postings;
         break;
       }
@@ -66,6 +69,10 @@ public class InvertedList{
 
     // Update meta data
     this.term_frequency++;
+
+    // Technically, adding posting basically means postings are already loaded
+    //  into memory. Nevertheless, this might lead to some bugs.
+    this.are_postings_loaded = true;
   }
 
   // NOTE: Did not delta encode doc_ids list
@@ -81,7 +88,7 @@ public class InvertedList{
     int num_of_integers = 0;
     for(int i=0; i<this.postings.size(); i++){
       DocumentPostings doc_postings = this.postings.get(i);
-      num_of_integers += (2 + doc_postings.positions.size());
+      num_of_integers += (2 + doc_postings.getPositionsSize());
     }
 
     return num_of_integers;
@@ -98,10 +105,10 @@ public class InvertedList{
     int encoded_list_pointer = 0;
     for(int i=0; i<this.postings.size(); i++){
       DocumentPostings doc_postings = this.postings.get(i);
-      ArrayList<Integer> positions = doc_postings.positions;
+      ArrayList<Integer> positions = doc_postings.getAllPositions();
 
-      encoded_list[encoded_list_pointer++] = doc_postings.doc_id;
-      encoded_list[encoded_list_pointer++] = doc_postings.document_term_frequency;
+      encoded_list[encoded_list_pointer++] = doc_postings.getDocId();
+      encoded_list[encoded_list_pointer++] = doc_postings.getDocumentTermFrequency();
       for(int j=0; j<positions.size(); j++){
         encoded_list[encoded_list_pointer++] = positions.get(j);
       }
@@ -208,7 +215,7 @@ public class InvertedList{
     }
   }
 
-  public void reconstructFromDisk(RandomAccessFile reader){
+  public void reconstructPostingsFromDisk(RandomAccessFile reader){
     if(reader == null){
       System.out.println("No reader found. Exiting.");
       System.exit(1);
@@ -217,12 +224,17 @@ public class InvertedList{
     ArrayList<Integer> decoded_list = this.getDecodedList(byte_array);
     this.decoded_list = decoded_list;
     this.reconstructPostings(decoded_list);
+    this.are_postings_loaded = true;
   }
 
 
   // Utility functions
   public boolean isPostingsListEmpty(){
     return this.postings == null;
+  }
+
+  public boolean arePostingsLoaded(){
+    return this.are_postings_loaded;
   }
 
   public DocumentPostings getCurrentPostings(){
@@ -281,6 +293,29 @@ public class InvertedList{
     }
 
     return null;
+  }
+
+  // term-at-a-time based querying
+  // Returns ArrayList of scores of the form [doc_id_1 score_1 doc_id_2 score_2 ...]
+  // Scoring: Count based
+  public ArrayList<Integer> getDocumentWiseScores(){
+    ArrayList<Integer> document_scores = new ArrayList<Integer>();
+
+    // Postings list not loaded. Load it first.
+    if(!this.arePostingsLoaded()){
+      System.out.println("Postings list has not been read. Use reconstructPostingsFromDisk first");
+      // throw new PostingsListNotLoadedException("Postings list has not been read. Use reconstructPostingsFromDisk first");
+    }
+
+    this.resetPointer();
+    while(this.hasMorePostings()){
+      DocumentPostings current_postings = this.getCurrentPostings();
+      document_scores.add(current_postings.getDocId());
+      document_scores.add(current_postings.getDocumentTermFrequency());
+      this.setPointerToNextPostings();
+    }
+
+    return document_scores;
   }
 
   @Override

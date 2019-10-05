@@ -1,12 +1,12 @@
 import java.util.*;
 
 public class DocumentPostings{
-  int doc_id = 0;
-  boolean is_delta_encoded = false;
-  ArrayList<Integer> positions = null;
+  private int doc_id = 0;
+  private boolean is_delta_encoded = false;
+  private ArrayList<Integer> positions = null;
 
   // Document related meta data
-  int document_term_frequency = 0;
+  private int document_term_frequency = 0;
 
   DocumentPostings(int doc_id){
     this.doc_id = doc_id;
@@ -26,6 +26,18 @@ public class DocumentPostings{
 
   public int getDocId(){
     return this.doc_id;
+  }
+
+  public int getDocumentTermFrequency(){
+    return this.document_term_frequency;
+  }
+
+  public ArrayList<Integer> getAllPositions(){
+    return this.positions;
+  }
+
+  public int getPositionsSize(){
+    return this.positions.size();
   }
 
   public void addPosition(Integer position){

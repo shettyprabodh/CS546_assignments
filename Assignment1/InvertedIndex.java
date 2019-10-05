@@ -1,6 +1,7 @@
 import java.util.*;
 import java.nio.*;
 import java.io.*;
+import exceptions.*;
 import org.json.simple.*;
 import org.json.simple.parser.*;
 
@@ -10,15 +11,20 @@ public class InvertedIndex{
 
   String index_file_name = null;
   String lookup_table_json_name = null;
+  Tokenizer tokenizer = null;
+  private boolean is_lookup_table_loaded = false;
+
+  // File accessors
   RandomAccessFile writer = null;
   RandomAccessFile reader = null;
-  // compressed_data = {}
 
   InvertedIndex(ArrayList<Document> documents, String index_file_name, String lookup_table_json_name){
     this.raw_data = documents;
     this.index = new Hashtable<String, InvertedList>();
     this.index_file_name = index_file_name;
     this.lookup_table_json_name = lookup_table_json_name;
+    this.tokenizer = new Tokenizer();
+    this.is_lookup_table_loaded = false;
   }
 
   InvertedIndex(String index_file_name, String lookup_table_json_name){
@@ -26,6 +32,8 @@ public class InvertedIndex{
     this.index = new Hashtable<String, InvertedList>();
     this.index_file_name = index_file_name;
     this.lookup_table_json_name = lookup_table_json_name;
+    this.tokenizer = new Tokenizer();
+    this.is_lookup_table_loaded = false;
   }
 
   public void createIndex(){
@@ -55,6 +63,9 @@ public class InvertedIndex{
         correct_inverted_list.addPosting(current_doc.doc_id, term_position);
       }
     }
+
+    // Technically, lookup table is loaded in memory after creating the index
+    this.is_lookup_table_loaded = true;
   }
 
   private void setWriter(){
@@ -121,9 +132,12 @@ public class InvertedIndex{
   }
 
 
+  // Sets reader. If already, does nothing.
   private void setReader(){
     try{
-      this.reader = new RandomAccessFile(this.index_file_name, "rw");
+      if(this.reader == null){
+        this.reader = new RandomAccessFile(this.index_file_name, "rw");
+      }
     }
     catch (FileNotFoundException e){
       System.out.println(e);
@@ -151,6 +165,8 @@ public class InvertedIndex{
         InvertedList partial_inverted_list = new InvertedList(offset, (int)num_bytes);
         this.index.put(term, partial_inverted_list);
       }
+
+      this.is_lookup_table_loaded = true;
     }
     catch(ParseException e){
       System.out.println(e);
@@ -160,6 +176,9 @@ public class InvertedIndex{
     }
   }
 
+  public boolean isLookupTableLoaded(){
+    return this.is_lookup_table_loaded;
+  }
 
   // Builds whole index from disk. rebuildIndex and createIndex are the
   // only two methods used to create whole index.
@@ -169,8 +188,59 @@ public class InvertedIndex{
 
     for(String term: terms){
       InvertedList current_inverted_list = this.index.get(term);
-      current_inverted_list.reconstructFromDisk(reader);
+      current_inverted_list.reconstructPostingsFromDisk(this.reader);
     }
+  }
+
+  // Assumes query has been stemmed
+  // Returns an Arraylist(of size k) of doc_ids with descending scores
+  public ArrayList<Integer> getScores(String query){
+    if(!this.isLookupTableLoaded()){
+      this.loadLookupTable();
+      // System.out.println("Lookup table not loaded. Use loadLookupTable first");
+      // throw new LookupTableNotLoadedException("Lookup table not loaded. Use loadLookupTable first");
+    }
+    this.setReader();
+
+    long final_score = 0;
+    Hashtable<Integer, Long> accumulator = new Hashtable<Integer, Long>();
+
+    String[] query_terms = this.tokenizer.splitOnSpaces(query);
+
+    for(String query_term: query_terms){
+      InvertedList current_inverted_list = this.index.containsKey(query_term) ? this.index.get(query_term) : null;
+
+      // Zero score for query terms not indexed
+      if(current_inverted_list == null){
+        continue;
+      }
+
+      // Load postings to disk
+      current_inverted_list.reconstructPostingsFromDisk(this.reader);
+      // Document scores format [doc_id_1 score_1 doc_id_2 score_2 ...]
+      ArrayList<Integer> document_scores = current_inverted_list.getDocumentWiseScores();
+      System.out.println(query_term + " : " + Arrays.toString(document_scores.toArray()));
+
+      for(int i=0; i<document_scores.size(); i+=2){
+        Integer doc_id = document_scores.get(i);
+        Integer score = document_scores.get(i+1);
+
+        if(accumulator.containsKey(doc_id)){
+          Long partial_score = accumulator.get(doc_id);
+          partial_score += score.longValue();
+          accumulator.put(doc_id, partial_score);
+        }
+        else{
+          accumulator.put(doc_id, score.longValue());
+        }
+      }
+    }
+
+    // Sorting scores
+    // TODO: USe PriorityQueue with <Long, Integer>
+    PriorityQueue<Integer> pQueue = new PriorityQueue<Integer>();
+
+    return new ArrayList<Integer>();
   }
 
   // Utility functions
