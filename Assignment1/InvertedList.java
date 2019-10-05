@@ -4,9 +4,11 @@ import java.io.*;
 
 // More or less a lookup_table along with postings list.
 // Whenever the lookup table is loaded, except for
-// doc_postings everything is loaded.
+// postings everything is loaded.
 public class InvertedList{
-  ArrayList<DocumentPostings> doc_postings = null;
+  ArrayList<DocumentPostings> postings = null;
+  // If this is set to null, then postings are not loaded.
+  private int current_postings_pointer = 0;
 
   // Lookup table params
   long offset = 0;
@@ -14,74 +16,72 @@ public class InvertedList{
 
   // Term related meta data
   int term_frequency = 0;
-  boolean is_delta_encoded = false;
-  boolean is_v_byte_compressed = false;
-  boolean are_postings_loaded = false;
 
   // For debugging purposes
   int[] encoded_list = null;
   ArrayList<Integer> decoded_list = null;
 
   InvertedList(){
-    this.doc_postings = new ArrayList<DocumentPostings>();
+    this.postings = new ArrayList<DocumentPostings>();
+    this.current_postings_pointer = 0;
     this.term_frequency = 0;
     this.offset = 0;
     this.num_bytes = 0;
-    this.is_delta_encoded = false;
-    this.are_postings_loaded = false;
   }
 
-  InvertedList(long offset, int num_bytes, boolean is_delta_encoded, boolean is_v_byte_compressed){
-    this.doc_postings = new ArrayList<DocumentPostings>();
+  InvertedList(long offset, int num_bytes){
+    this.postings = new ArrayList<DocumentPostings>();
+    this.current_postings_pointer = 0;
     // Will be updated whenever postings list is loaded
     this.term_frequency = 0;
     this.offset = offset;
     this.num_bytes = num_bytes;
-    this.is_delta_encoded = is_delta_encoded;
-    this.are_postings_loaded = is_v_byte_compressed;
   }
 
+  // Reason for not using current_postings_pointer is because, if
+  // for some reason, someone iterates through postings
+  // list before indexing all the data,
+  // current_postings_pointer might point to some
+  // postings other than the last one and thus breaking the ordering
+  // of postings list.
   public void addPosting(Integer doc_id, Integer position){
     DocumentPostings correct_doc_postings = null;
 
     // Search for doc posting
     // TODO: Can be improved using HashSet or using the ordering of doc_ids
-    for(int i=0; i<this.doc_postings.size(); i++){
-      DocumentPostings current_doc_postings = this.doc_postings.get(i);
-      if(current_doc_postings.doc_id == doc_id){
-        correct_doc_postings = current_doc_postings;
+    for(int i=0; i<this.postings.size(); i++){
+      DocumentPostings doc_postings = this.postings.get(i);
+      if(doc_postings.doc_id == doc_id){
+        correct_doc_postings = doc_postings;
         break;
       }
     }
 
     if(correct_doc_postings == null){
       correct_doc_postings = new DocumentPostings(doc_id);
-      this.doc_postings.add(correct_doc_postings);
+      this.postings.add(correct_doc_postings);
     }
 
     correct_doc_postings.addPosition(position);
 
     // Update meta data
     this.term_frequency++;
-    this.are_postings_loaded = true;
   }
 
   // NOTE: Did not delta encode doc_ids list
   private void deltaEncodePostings(){
-    for(int i=0; i<this.doc_postings.size(); i++){
-      DocumentPostings current_doc_postings = this.doc_postings.get(i);
-      current_doc_postings.deltaEncodePositions();
+    for(int i=0; i<this.postings.size(); i++){
+      DocumentPostings doc_postings = this.postings.get(i);
+      doc_postings.deltaEncodePositions();
     }
-
-    this.is_delta_encoded = true;
   }
 
   // Get size of encoded list
   private int getEncodedListSize(){
     int num_of_integers = 0;
-    for(int i=0; i<this.doc_postings.size(); i++){
-      DocumentPostings current_doc_postings = this.doc_postings.get(i);
-      num_of_integers += (2 + current_doc_postings.positions.size());
+    for(int i=0; i<this.postings.size(); i++){
+      DocumentPostings doc_postings = this.postings.get(i);
+      num_of_integers += (2 + doc_postings.positions.size());
     }
 
     return num_of_integers;
@@ -96,12 +96,12 @@ public class InvertedList{
     }
 
     int encoded_list_pointer = 0;
-    for(int i=0; i<this.doc_postings.size(); i++){
-      DocumentPostings current_doc_postings = this.doc_postings.get(i);
-      ArrayList<Integer> positions = current_doc_postings.positions;
+    for(int i=0; i<this.postings.size(); i++){
+      DocumentPostings doc_postings = this.postings.get(i);
+      ArrayList<Integer> positions = doc_postings.positions;
 
-      encoded_list[encoded_list_pointer++] = current_doc_postings.doc_id;
-      encoded_list[encoded_list_pointer++] = current_doc_postings.document_term_frequency;
+      encoded_list[encoded_list_pointer++] = doc_postings.doc_id;
+      encoded_list[encoded_list_pointer++] = doc_postings.document_term_frequency;
       for(int j=0; j<positions.size(); j++){
         encoded_list[encoded_list_pointer++] = positions.get(j);
       }
@@ -144,6 +144,8 @@ public class InvertedList{
     int[] encoded_list = this.getEncodedList(is_compression_required);
     this.writeToDisk(encoded_list, writer);
   }
+
+
 
   private byte[] readFromDisk(RandomAccessFile reader){
     byte[] b_array = new byte[this.num_bytes];
@@ -188,12 +190,10 @@ public class InvertedList{
     return decoded_list;
   }
 
-  // Decode list format [doc_id dtf positions ...]
-  private void reconstructDocumentPostings(ArrayList<Integer> decoded_list){
+  // Decoded list format [doc_id dtf positions ...]
+  private void reconstructPostings(ArrayList<Integer> decoded_list){
     int decoded_list_pointer = 0;
-    // System.out.println("Offset: " + this.offset);
     while(decoded_list_pointer<decoded_list.size()){
-      // System.out.println(decoded_list[decoded_list_pointer]);
       int doc_id = decoded_list.get(decoded_list_pointer++);
       int dtf = decoded_list.get(decoded_list_pointer++);
       ArrayList<Integer> positions = new ArrayList<Integer>();
@@ -202,8 +202,8 @@ public class InvertedList{
         positions.add(decoded_list.get(decoded_list_pointer++));
       }
 
-      DocumentPostings current_doc_postings = new DocumentPostings(doc_id, false, positions);
-      this.doc_postings.add(current_doc_postings);
+      DocumentPostings doc_postings = new DocumentPostings(doc_id, false, positions);
+      this.postings.add(doc_postings);
       this.term_frequency += dtf;
     }
   }
@@ -216,7 +216,71 @@ public class InvertedList{
     byte[] byte_array = this.readFromDisk(reader);
     ArrayList<Integer> decoded_list = this.getDecodedList(byte_array);
     this.decoded_list = decoded_list;
-    this.reconstructDocumentPostings(decoded_list);
+    this.reconstructPostings(decoded_list);
+  }
+
+
+  // Utility functions
+  public boolean isPostingsListEmpty(){
+    return this.postings == null;
+  }
+
+  public DocumentPostings getCurrentPostings(){
+    if(!this.isPostingsListEmpty()){
+      return this.postings.get(current_postings_pointer);
+    }
+    else{
+      return null;
+    }
+  }
+
+  public boolean hasMorePostings(){
+    return (!this.isPostingsListEmpty()) && (this.current_postings_pointer < this.postings.size());
+  }
+
+  // Reset postings pointer to start of postings list if it exists
+  // Always reset before traversing postings list
+  // Usage:-
+  //
+  // IL.resetPointer()
+  // while(IL.hasMorePostings()){
+  // current_postings = IL.getCurrentPostings();
+  // .....
+  // IL.setPointerToNextPostings();
+  // }
+  public void resetPointer(){
+    this.current_postings_pointer = 0;
+  }
+
+  public void setPointerToNextPostings(){
+    this.current_postings_pointer++;
+  }
+
+  // Returns DocumentPostings for given doc_id.
+  // Returns null if it doesn't exist.
+  public DocumentPostings getPostingsListByDocID(int doc_id){
+    if(this.postings == null){
+      return null;
+    }
+
+    // Because doc_ids are ordered, using binary search.
+    int start_pointer = 0;
+    int end_pointer = this.postings.size();
+    int mid_pointer = (start_pointer + end_pointer) / 2;
+
+    while(start_pointer < end_pointer){
+      DocumentPostings mid_postings = this.postings.get(mid_pointer);
+      if(mid_postings.getDocId() == doc_id){
+        return mid_postings;
+      } else if (mid_postings.getDocId() < doc_id){
+        start_pointer = mid_pointer + 1;
+      }
+      else{
+        end_pointer = mid_pointer - 1;
+      }
+    }
+
+    return null;
   }
 
   @Override
@@ -225,7 +289,7 @@ public class InvertedList{
 
     result += "{ ";
     result += ("term_frequency: " + term_frequency + "\n");
-    result += ("doc_postings: " + doc_postings.toString() + "\n");
+    result += ("postings: " + postings.toString() + "\n");
     result += ("offset: " + offset + "\n");
     result += ("num_bytes: " + num_bytes + "\n");
     // result += ("encoded_list: " + encoded_list[0] + "\n");

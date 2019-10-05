@@ -101,9 +101,6 @@ public class InvertedIndex{
 
       lookup_table_record.put("offset", current_inverted_list.offset);
       lookup_table_record.put("num_bytes", current_inverted_list.num_bytes);
-      lookup_table_record.put("is_delta_encoded", current_inverted_list.is_delta_encoded);
-      lookup_table_record.put("is_v_byte_compressed", current_inverted_list.is_v_byte_compressed);
-
 
       lookup_table.put(term, lookup_table_record);
     }
@@ -149,11 +146,9 @@ public class InvertedIndex{
         // System.out.println(temp.getClass().getSimpleName());
         long offset = (long) current_inverted_list_data.get("offset");
         int num_bytes = ((Long)current_inverted_list_data.get("num_bytes")).intValue();
-        boolean is_delta_encoded = (boolean) current_inverted_list_data.get("is_delta_encoded");
-        boolean is_v_byte_compressed = (boolean) current_inverted_list_data.get("is_v_byte_compressed");
 
         // Partial because postings list is not loaded
-        InvertedList partial_inverted_list = new InvertedList(offset, (int)num_bytes, is_delta_encoded, is_v_byte_compressed);
+        InvertedList partial_inverted_list = new InvertedList(offset, (int)num_bytes);
         this.index.put(term, partial_inverted_list);
       }
     }

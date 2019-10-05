@@ -24,6 +24,10 @@ public class DocumentPostings{
     this.document_term_frequency = this.positions.size();
   }
 
+  public int getDocId(){
+    return this.doc_id;
+  }
+
   public void addPosition(Integer position){
     this.positions.add(position);
 
