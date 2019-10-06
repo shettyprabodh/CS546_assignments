@@ -19,7 +19,7 @@ public class InvertedList{
   int term_frequency = 0;
 
   // For debugging purposes
-  int[] encoded_list = null;
+  byte[] encoded_list = null;
   ArrayList<Integer> decoded_list = null;
 
   InvertedList(){
@@ -124,7 +124,7 @@ public class InvertedList{
   }
 
   // TODO: Need to complete v_byte compression
-  private int[] getEncodedList(boolean is_compression_required){
+  private byte[] getEncodedList(boolean is_compression_required){
     int[] encoded_list = new int[this.getEncodedListSize()];
 
     if(is_compression_required){
@@ -144,22 +144,31 @@ public class InvertedList{
     }
 
     // TODO: Need to complete v_byte compression
+    int num_bytes = (encoded_list.length)*(Integer.BYTES);
+    ByteBuffer byte_buffer = ByteBuffer.allocate(num_bytes);
+    IntBuffer int_buffer = byte_buffer.asIntBuffer();
+    int_buffer.put(encoded_list);
 
-    return encoded_list;
+    byte[] b_array = byte_buffer.array();
+
+    return b_array;
   }
 
-  private void writeToDisk(int[] encoded_list, RandomAccessFile writer){
+  // private void vByteEncode(int[] input, ByteBuffer output){
+  //   for(int i: input){
+  //     while(i>=128){
+  //       output.put(i&0x7F);
+  //       i>>>=7;
+  //     }
+  //     output.put(i | 0x80);
+  //   }
+  // }
+
+  private void writeToDisk(byte[] encoded_list, RandomAccessFile writer, boolean is_compression_required){
     try{
       long current_offset = writer.getFilePointer();
-      int num_bytes = (encoded_list.length)*(Integer.BYTES);
-      ByteBuffer byte_buffer = ByteBuffer.allocate(num_bytes);
-      IntBuffer int_buffer = byte_buffer.asIntBuffer();
-      int_buffer.put(encoded_list);
-
-      byte[] b_array = byte_buffer.array();
-      writer.write(b_array);
-
       this.offset = current_offset;
+      writer.write(encoded_list);
       this.num_bytes = (int)(writer.getFilePointer() - current_offset);
       this.encoded_list = encoded_list;
     }
@@ -177,8 +186,8 @@ public class InvertedList{
       System.exit(1);
     }
 
-    int[] encoded_list = this.getEncodedList(is_compression_required);
-    this.writeToDisk(encoded_list, writer);
+    byte[] encoded_list = this.getEncodedList(is_compression_required);
+    this.writeToDisk(encoded_list, writer, is_compression_required);
   }
 
 

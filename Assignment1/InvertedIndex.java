@@ -129,8 +129,6 @@ public class InvertedIndex{
 
   // An array of integers
   public void flushToDisk(){
-    this.setWriter();
-
     Set<String> terms = this.index.keySet();
 
     for(String term: terms){
