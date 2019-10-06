@@ -127,14 +127,25 @@ public class InvertedIndex{
     }
   }
 
+  public void setCompressionByte(boolean is_compression_required){
+    RandomAccessFile writer = this.getWriter();
+    byte compression_byte = (byte)(is_compression_required ? 1: 0);
+    try{
+      writer.write(compression_byte);
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
   // An array of integers
-  public void flushToDisk(){
+  public void flushToDisk(boolean is_compression_required){
     Set<String> terms = this.index.keySet();
 
     for(String term: terms){
       InvertedList current_inverted_list = this.index.get(term);
       // TODO: Update is_compression_required here
-      current_inverted_list.flushToDisk(this.getWriter(), true);
+      current_inverted_list.flushToDisk(this.getWriter(), is_compression_required);
     }
 
     // Closing writer
@@ -191,9 +202,10 @@ public class InvertedIndex{
     }
   }
 
-  public void write(){
+  public void write(boolean is_compression_required){
     // Internally uses writer object. Or it could be a part of encoder
-    this.flushToDisk();
+    this.setCompressionByte(is_compression_required);
+    this.flushToDisk(is_compression_required);
     this.flushLookupTable();
     this.flushDataStatistics();
   }
