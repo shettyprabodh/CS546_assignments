@@ -16,7 +16,7 @@ public class TopLevelClass{
     System.out.println("====================== Created Inverted Index ======================");
     // System.out.println(shakespeare_index);
 
-    shakespeare_index.write(false);
+    shakespeare_index.write(true);
 
     System.out.println("====================== Wrote Inverted Index ======================");
     // Assume "delete shakespeare_index" here

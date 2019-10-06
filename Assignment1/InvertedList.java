@@ -149,23 +149,20 @@ public class InvertedList{
     int num_bytes = (encoded_list.length)*(Integer.BYTES);
     ByteBuffer byte_buffer = ByteBuffer.allocate(num_bytes);
     IntBuffer int_buffer = byte_buffer.asIntBuffer();
-    System.out.println(Arrays.toString(encoded_list));
+
     if(is_compression_required){
       this.vByteEncode(encoded_list, byte_buffer);
-      // byte_buffer.compact();
-      System.out.println("Rem: " + byte_buffer.remaining() + " Offset: " + byte_buffer.arrayOffset() + " Position: " + byte_buffer.position() + " Limit: " + byte_buffer.limit() + " Capacity: " + byte_buffer.capacity());
+      // System.out.println("Rem: " + byte_buffer.remaining() + " Offset: " + byte_buffer.arrayOffset() + " Position: " + byte_buffer.position() + " Limit: " + byte_buffer.limit() + " Capacity: " + byte_buffer.capacity());
     }
     else{
       int_buffer.put(encoded_list);
-      System.out.println("Rem: " + byte_buffer.remaining() + " Offset: " + byte_buffer.arrayOffset() + " Position: " + byte_buffer.position() + " Limit: " + byte_buffer.limit() + " Capacity: " + byte_buffer.capacity());
+      // System.out.println("Rem: " + byte_buffer.remaining() + " Offset: " + byte_buffer.arrayOffset() + " Position: " + byte_buffer.position() + " Limit: " + byte_buffer.limit() + " Capacity: " + byte_buffer.capacity());
     }
     int position = byte_buffer.position();
     byte[] b_array = byte_buffer.array();
-    System.out.println("b_array size: " + b_array.length);
     if(is_compression_required){
       b_array = Arrays.copyOfRange(b_array, 0, position);
     }
-    System.out.println("b_array size: " + b_array.length);
 
     return b_array;
   }
@@ -217,11 +214,14 @@ public class InvertedList{
       reader.read(compression_byte, 0, 1);
 
       InvertedList.is_compressed = (boolean)(compression_byte[0] == 1);
-      System.out.println(InvertedList.is_compressed);
     }
     catch(IOException e){
       System.out.println(e);
     }
+  }
+
+  public boolean isIndexCompressed(){
+    return InvertedList.is_compressed;
   }
 
   private byte[] readFromDisk(RandomAccessFile reader){
@@ -245,7 +245,7 @@ public class InvertedList{
 
     for(int i=Integer.BYTES - 1; i >= 0; i--){
       // Magic. Without "& 0xFF", we are getting negative numbers in some cases.
-      result = result | ((byte_array[i]&(0xFF))*(1 << shifts));
+      result |= ((byte_array[i]&(0xFF))*(1 << shifts));
       shifts += 8;
     }
 
@@ -259,12 +259,33 @@ public class InvertedList{
     ArrayList<Integer> decoded_list = new ArrayList<Integer>();
 
     // Uncompressed version
-    int decoded_list_pointer = 0;
-    for(int i=0; i<byte_array.length; i+=4){
-      decoded_list.add(this.byteArrayToInt(Arrays.copyOfRange(byte_array, i, i+4)));
+    if(!this.isIndexCompressed()){
+      int decoded_list_pointer = 0;
+      for(int i=0; i<byte_array.length; i+=4){
+        decoded_list.add(this.byteArrayToInt(Arrays.copyOfRange(byte_array, i, i+4)));
+      }
+    }
+    else{
+      this.vByteDecode(byte_array, decoded_list);
     }
 
     return decoded_list;
+  }
+
+  private void vByteDecode(byte[] input, ArrayList<Integer> output){
+    int i = 0;
+    while(i<input.length){
+      int position = 0;
+      int result = ((int)input[i]&0x7F);
+      while((input[i]&0x80) == 0){
+        i++;
+        position++;
+        int unsigned_byte = ((int)input[i]&0x7F);
+        result |= (unsigned_byte << (7*position));
+      }
+      i++;
+      output.add(result);
+    }
   }
 
   // Decoded list format [doc_id dtf positions ...]
@@ -279,7 +300,10 @@ public class InvertedList{
         positions.add(decoded_list.get(decoded_list_pointer++));
       }
 
-      DocumentPostings doc_postings = new DocumentPostings(doc_id, false, positions);
+      DocumentPostings doc_postings = new DocumentPostings(doc_id, positions);
+      if(this.isIndexCompressed()){
+        doc_postings.deltaDecodePositions();
+      }
       this.postings.add(doc_postings);
       this.term_frequency += dtf;
     }

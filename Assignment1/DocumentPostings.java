@@ -2,7 +2,6 @@ import java.util.*;
 
 public class DocumentPostings{
   private int doc_id = 0;
-  private boolean is_delta_encoded = false;
   private ArrayList<Integer> positions = null;
 
   // Document related meta data
@@ -10,16 +9,13 @@ public class DocumentPostings{
 
   DocumentPostings(int doc_id){
     this.doc_id = doc_id;
-    this.is_delta_encoded = false;
     this.positions = new ArrayList<Integer>();
     this.document_term_frequency = 0;
   }
 
   // Will be used while reading II from disk
-  // TODO: is_delta_encoded needed?
-  DocumentPostings(int doc_id, boolean is_delta_encoded, ArrayList<Integer> positions){
+  DocumentPostings(int doc_id, ArrayList<Integer> positions){
     this.doc_id = doc_id;
-    this.is_delta_encoded = false;
     this.positions = positions;
     this.document_term_frequency = this.positions.size();
   }
@@ -48,10 +44,15 @@ public class DocumentPostings{
   }
 
   public void deltaEncodePositions(){
-    for(int i=1; i<this.positions.size(); i++){
+    for(int i=this.positions.size()-1; i>=1; i--){
       this.positions.set(i, this.positions.get(i) - this.positions.get(i-1));
     }
-    this.is_delta_encoded = true;
+  }
+
+  public void deltaDecodePositions(){
+    for(int i=1; i<this.positions.size(); i++){
+      this.positions.set(i, this.positions.get(i) + this.positions.get(i-1));
+    }
   }
 
   // Gets count of phrases like "this other" (e.g "White House") occuring together.
