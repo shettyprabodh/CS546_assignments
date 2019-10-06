@@ -302,7 +302,7 @@ public class InvertedIndex{
   // only two methods used to create whole index.
   public void rebuildIndex(){
     Set<String> terms = this.index.keySet();
-
+    InvertedList.readCompressionByte(this.getReader());
     for(String term: terms){
       InvertedList current_inverted_list = this.index.get(term);
       current_inverted_list.reconstructPostingsFromDisk(this.getReader());
@@ -321,6 +321,8 @@ public class InvertedIndex{
 
     PriorityQueue<PairLongInteger> R = new PriorityQueue<PairLongInteger>();
     String[] query_terms = this.tokenizer.splitOnSpaces(query);
+
+    InvertedList.readCompressionByte(this.getReader());
 
     for(int doc_id=0; doc_id<this.getLastDocID(); doc_id++){
       long total_score = 0;
@@ -364,6 +366,8 @@ public class InvertedIndex{
     if(!this.isLookupTableLoaded()){
       this.loadLookupTable();
     }
+
+    InvertedList.readCompressionByte(this.getReader());
 
     InvertedList IL_a = this.index.containsKey(a) ? this.index.get(a) : null;
     InvertedList IL_b = this.index.containsKey(b) ? this.index.get(b) : null;

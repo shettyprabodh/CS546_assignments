@@ -14,6 +14,7 @@ public class InvertedList{
   // Lookup table params
   private long offset = 0;
   private int num_bytes = 0;
+  private static boolean is_compressed = false;
 
   // Term related meta data
   int term_frequency = 0;
@@ -206,6 +207,22 @@ public class InvertedList{
   }
 
 
+  // Read this prior to reading any InvertedList. Without this function being
+  // called, it is assumed that all InvertedLists are uncompressed.
+  // Compression byte is always stored at offset 0.
+  public static void readCompressionByte(RandomAccessFile reader){
+    byte[] compression_byte = new byte[1];
+    try{
+      reader.seek(0);
+      reader.read(compression_byte, 0, 1);
+
+      InvertedList.is_compressed = (boolean)(compression_byte[0] == 1);
+      System.out.println(InvertedList.is_compressed);
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
 
   private byte[] readFromDisk(RandomAccessFile reader){
     byte[] b_array = new byte[this.num_bytes];
