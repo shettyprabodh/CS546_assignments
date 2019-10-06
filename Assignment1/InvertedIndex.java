@@ -134,7 +134,7 @@ public class InvertedIndex{
     for(String term: terms){
       InvertedList current_inverted_list = this.index.get(term);
       // TODO: Update is_compression_required here
-      current_inverted_list.flushToDisk(this.getWriter(), false);
+      current_inverted_list.flushToDisk(this.getWriter(), true);
     }
 
     // Closing writer

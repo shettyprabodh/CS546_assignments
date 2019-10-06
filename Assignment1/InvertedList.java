@@ -144,25 +144,38 @@ public class InvertedList{
     }
 
     // TODO: Need to complete v_byte compression
+    // Byte related compressions
     int num_bytes = (encoded_list.length)*(Integer.BYTES);
     ByteBuffer byte_buffer = ByteBuffer.allocate(num_bytes);
     IntBuffer int_buffer = byte_buffer.asIntBuffer();
-    int_buffer.put(encoded_list);
-
+    System.out.println(Arrays.toString(encoded_list));
+    if(is_compression_required){
+      this.vByteEncode(encoded_list, byte_buffer);
+      // byte_buffer.compact();
+      System.out.println("Rem: " + byte_buffer.remaining() + " Offset: " + byte_buffer.arrayOffset() + " Position: " + byte_buffer.position() + " Limit: " + byte_buffer.limit() + " Capacity: " + byte_buffer.capacity());
+    }
+    else{
+      int_buffer.put(encoded_list);
+      System.out.println("Rem: " + byte_buffer.remaining() + " Offset: " + byte_buffer.arrayOffset() + " Position: " + byte_buffer.position() + " Limit: " + byte_buffer.limit() + " Capacity: " + byte_buffer.capacity());
+    }
+    int position = byte_buffer.position();
     byte[] b_array = byte_buffer.array();
+    System.out.println("b_array size: " + b_array.length);
+    b_array = Arrays.copyOfRange(b_array, 0, position);
+    System.out.println("b_array size: " + b_array.length);
 
     return b_array;
   }
 
-  // private void vByteEncode(int[] input, ByteBuffer output){
-  //   for(int i: input){
-  //     while(i>=128){
-  //       output.put(i&0x7F);
-  //       i>>>=7;
-  //     }
-  //     output.put(i | 0x80);
-  //   }
-  // }
+  private void vByteEncode(int[] input, ByteBuffer output){
+    for(int i: input){
+      while(i>=128){
+        output.put((byte)(i&0x7F));
+        i>>>=7;
+      }
+      output.put((byte)(i|0x80));
+    }
+  }
 
   private void writeToDisk(byte[] encoded_list, RandomAccessFile writer, boolean is_compression_required){
     try{
