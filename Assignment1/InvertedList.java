@@ -161,7 +161,9 @@ public class InvertedList{
     int position = byte_buffer.position();
     byte[] b_array = byte_buffer.array();
     System.out.println("b_array size: " + b_array.length);
-    b_array = Arrays.copyOfRange(b_array, 0, position);
+    if(is_compression_required){
+      b_array = Arrays.copyOfRange(b_array, 0, position);
+    }
     System.out.println("b_array size: " + b_array.length);
 
     return b_array;
