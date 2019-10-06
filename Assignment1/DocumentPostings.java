@@ -54,6 +54,35 @@ public class DocumentPostings{
     this.is_delta_encoded = true;
   }
 
+  // Gets count of phrases like "this other" (e.g "White House") occuring together.
+  public int getAdjacentCount(DocumentPostings other){
+    int adjacent_count = 0;
+    int this_pointer = 0;
+    int other_pointer = 0;
+
+    ArrayList<Integer> this_positions = this.getAllPositions();
+    ArrayList<Integer> other_positions = other.getAllPositions();
+
+    while(this_pointer < this_positions.size() && other_pointer < other_positions.size()){
+      int this_position = this_positions.get(this_pointer);
+      int other_position = other_positions.get(other_pointer);
+
+      if(this_position+1 == other_position){
+        adjacent_count++;
+        this_pointer++;
+        other_pointer++;
+      }
+      else if(this_position+1 < other_position){
+        this_pointer++;
+      }
+      else{
+        other_pointer++;
+      }
+    }
+
+    return adjacent_count;
+  }
+
   @Override
   public String toString(){
     String result = "";

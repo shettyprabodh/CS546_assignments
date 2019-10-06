@@ -36,6 +36,10 @@ public class TopLevelClass{
 
     System.out.println("====================== Querying done ======================");
 
+    System.out.println("DC: " + new_shakespeare_index.getDicesCoefficient("the", "noble"));
+
+    System.out.println("====================== Dice's coefficient done ======================");
+
     System.out.println("Done");
   }
 }

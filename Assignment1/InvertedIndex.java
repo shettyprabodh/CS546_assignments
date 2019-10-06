@@ -18,7 +18,9 @@ public class InvertedIndex{
 
   // Data statistics
   private int last_doc_id = 0;
-  private int num_of_docs = 0;
+  private int document_count = 0;
+  // NOTE: TreeMap can be used here if we want to save space
+  private Hashtable term_statistics = null;
 
   // File accessors
   RandomAccessFile writer = null;
@@ -33,6 +35,7 @@ public class InvertedIndex{
     this.tokenizer = new Tokenizer();
     this.is_lookup_table_loaded = false;
     this.are_data_statistics_loaded = false;
+    this.term_statistics = new Hashtable<String, TermStatistics>();
   }
 
   InvertedIndex(String index_file_name, String lookup_table_json_name, String data_statistics_json_name){
@@ -44,14 +47,23 @@ public class InvertedIndex{
     this.tokenizer = new Tokenizer();
     this.is_lookup_table_loaded = false;
     this.are_data_statistics_loaded = false;
+    this.term_statistics = new Hashtable<String, TermStatistics>();
   }
 
   public int getLastDocID(){
     return this.last_doc_id;
   }
 
-  public int getNumOfDocs(){
-    return this.num_of_docs;
+  public int getDocumentCount(){
+    return this.document_count;
+  }
+
+  public Set<String> getVocabulary(){
+    if(!this.isLookupTableLoaded()){
+      this.loadLookupTable();
+    }
+
+    return this.index.keySet();
   }
 
   public void createIndex(){
@@ -65,7 +77,7 @@ public class InvertedIndex{
       String[] terms = current_doc.terms;
 
       this.last_doc_id = (this.last_doc_id < current_doc.doc_id) ? current_doc.doc_id : this.last_doc_id;
-      this.num_of_docs++;
+      this.document_count++;
 
       for(int term_position=0; term_position < terms.length; term_position++){
         String current_term = terms[term_position];
@@ -92,11 +104,18 @@ public class InvertedIndex{
 
   private void setWriter(){
     try{
-      this.writer = new RandomAccessFile(this.index_file_name, "rw");
+      if(this.writer == null){
+        this.writer = new RandomAccessFile(this.index_file_name, "rw");
+      }
     }
     catch (FileNotFoundException e){
       System.out.println(e);
     }
+  }
+
+  private RandomAccessFile getWriter(){
+    this.setWriter();
+    return this.writer;
   }
 
   private void closeWriter(){
@@ -117,7 +136,7 @@ public class InvertedIndex{
     for(String term: terms){
       InvertedList current_inverted_list = this.index.get(term);
       // TODO: Update is_compression_required here
-      current_inverted_list.flushToDisk(this.writer, false);
+      current_inverted_list.flushToDisk(this.getWriter(), false);
     }
 
     // Closing writer
@@ -132,8 +151,8 @@ public class InvertedIndex{
       InvertedList current_inverted_list = this.index.get(term);
       JSONObject lookup_table_record = new JSONObject();
 
-      lookup_table_record.put("offset", current_inverted_list.offset);
-      lookup_table_record.put("num_bytes", current_inverted_list.num_bytes);
+      lookup_table_record.put("offset", current_inverted_list.getOffset());
+      lookup_table_record.put("num_bytes", current_inverted_list.getNumBytes());
 
       lookup_table.put(term, lookup_table_record);
     }
@@ -148,10 +167,22 @@ public class InvertedIndex{
   }
 
   public void flushDataStatistics(){
+
+    Set<String> terms = this.index.keySet();
     JSONObject data_statistics = new JSONObject();
 
     data_statistics.put("last_doc_id", this.getLastDocID());
-    data_statistics.put("num_of_docs", this.getNumOfDocs());
+    data_statistics.put("document_count", this.getDocumentCount());
+
+    for(String term: terms){
+      InvertedList current_inverted_list = this.index.get(term);
+      JSONObject term_statistics = new JSONObject();
+
+      term_statistics.put("term_frequency", current_inverted_list.getTermFrequency(this.getReader()));
+      term_statistics.put("document_count", current_inverted_list.getDocumentCount(this.getReader()));
+    }
+
+    data_statistics.put("term_statistics", term_statistics);
 
     try(FileWriter file = new FileWriter(this.data_statistics_json_name)){
       file.write(data_statistics.toJSONString());
@@ -170,7 +201,7 @@ public class InvertedIndex{
   }
 
 
-  // Sets reader. If already, does nothing.
+  // Sets reader. If already set, does nothing.
   private void setReader(){
     try{
       if(this.reader == null){
@@ -180,6 +211,11 @@ public class InvertedIndex{
     catch (FileNotFoundException e){
       System.out.println(e);
     }
+  }
+
+  private RandomAccessFile getReader(){
+    this.setReader();
+    return this.reader;
   }
 
   // First step before querying. Loading the lookup table
@@ -221,7 +257,18 @@ public class InvertedIndex{
       JSONObject data_statistics = (JSONObject) parser.parse(file);
 
       this.last_doc_id = ((Long)data_statistics.get("last_doc_id")).intValue();
-      this.num_of_docs = ((Long)data_statistics.get("num_of_docs")).intValue();
+      this.document_count = ((Long)data_statistics.get("document_count")).intValue();
+
+      JSONObject term_statistics = (JSONObject)data_statistics.get("term_statistics");
+      Set<String> terms = term_statistics.keySet();
+
+      for(String term: terms){
+        JSONObject current_term_statistics = (JSONObject) term_statistics.get(term);
+        int term_frequency = ((Long)current_term_statistics.get("term_frequency")).intValue();
+        int document_count = ((Long)current_term_statistics.get("document_count")).intValue();
+
+        this.term_statistics.put(term, new TermStatistics(term_frequency, document_count));
+      }
 
       this.are_data_statistics_loaded = true;
     }
@@ -244,12 +291,11 @@ public class InvertedIndex{
   // Builds whole index from disk. rebuildIndex and createIndex are the
   // only two methods used to create whole index.
   public void rebuildIndex(){
-    this.setReader();
     Set<String> terms = this.index.keySet();
 
     for(String term: terms){
       InvertedList current_inverted_list = this.index.get(term);
-      current_inverted_list.reconstructPostingsFromDisk(this.reader);
+      current_inverted_list.reconstructPostingsFromDisk(this.getReader());
     }
   }
 
@@ -263,7 +309,6 @@ public class InvertedIndex{
       this.loadDataStatistics();
     }
 
-    this.setReader();
     PriorityQueue<PairLongInteger> R = new PriorityQueue<PairLongInteger>();
     String[] query_terms = this.tokenizer.splitOnSpaces(query);
 
@@ -278,7 +323,7 @@ public class InvertedIndex{
           continue;
         }
 
-        total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.reader);
+        total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.getReader());
       }
 
       R.add(new PairLongInteger(total_score, doc_id));
@@ -303,6 +348,49 @@ public class InvertedIndex{
     }
 
     return result;
+  }
+
+  public double getDicesCoefficient(String a, String b){
+    if(!this.isLookupTableLoaded()){
+      this.loadLookupTable();
+    }
+
+    InvertedList IL_a = this.index.containsKey(a) ? this.index.get(a) : null;
+    InvertedList IL_b = this.index.containsKey(b) ? this.index.get(b) : null;
+
+    if((IL_a == null) || (IL_b == null)){
+      return 0.0;
+    }
+
+    IL_a.reconstructPostingsFromDisk(this.getReader());
+    IL_b.reconstructPostingsFromDisk(this.getReader());
+
+    int n_a = IL_a.getTermFrequency(this.getReader());
+    int n_b = IL_b.getTermFrequency(this.getReader());
+    int n_a_b = 0;
+
+    IL_a.resetPointer();
+    IL_b.resetPointer();
+
+    while(IL_a.hasMorePostings() && IL_b.hasMorePostings()){
+      DocumentPostings current_postings_a = IL_a.getCurrentPostings();
+      DocumentPostings current_postings_b = IL_b.getCurrentPostings();
+
+      if(current_postings_a.getDocId() == current_postings_b.getDocId()){
+        n_a_b += (current_postings_a.getAdjacentCount(current_postings_b));
+        IL_a.setPointerToNextPostings();
+        IL_b.setPointerToNextPostings();
+      }
+      else if(current_postings_a.getDocId() < current_postings_b.getDocId()){
+        IL_a.setPointerToNextPostings();
+      }
+      else{
+        IL_b.setPointerToNextPostings();
+      }
+    }
+    System.out.println("a: " + n_a + " b: " + n_b + " ab: " + n_a_b);
+    double d_c = ((double)n_a_b)/(n_a + n_b);
+    return d_c;
   }
 
   // Utility functions

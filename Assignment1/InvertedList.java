@@ -12,8 +12,8 @@ public class InvertedList{
   private boolean are_postings_loaded = false;
 
   // Lookup table params
-  long offset = 0;
-  int num_bytes = 0;
+  private long offset = 0;
+  private int num_bytes = 0;
 
   // Term related meta data
   int term_frequency = 0;
@@ -39,6 +39,35 @@ public class InvertedList{
     this.offset = offset;
     this.num_bytes = num_bytes;
     this.are_postings_loaded = false;
+  }
+
+  public long getOffset(){
+    return this.offset;
+  }
+
+  public int getNumBytes(){
+    return this.num_bytes;
+  }
+
+  public int getTermFrequency(RandomAccessFile reader){
+    if(!this.arePostingsLoaded()){
+      this.reconstructPostingsFromDisk(reader);
+    }
+    int total_count = 0;
+
+    for(int i=0; i<this.postings.size(); i++){
+      total_count += (this.postings.get(i).getDocumentTermFrequency());
+    }
+
+    return total_count;
+  }
+
+  public int getDocumentCount(RandomAccessFile reader){
+    if(!this.arePostingsLoaded()){
+      this.reconstructPostingsFromDisk(reader);
+    }
+
+    return this.postings.size();
   }
 
   // Reason for not using current_postings_pointer is because, if
