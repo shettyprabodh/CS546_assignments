@@ -11,8 +11,8 @@ public class TopLevelClass{
 
     System.out.println("====================== Parsing JSON done ======================");
     String[] index_bin_names = new String[]{"index_uncompressed.bin", "index_compressed.bin"};
-    String[] lookup_table_names = new String[]{"lookup_table_uncompressed.bin", "lookup_table_compressed.bin"};
-    String[] data_statistics_names = new String[]{"data_statistics_uncompressed.bin", "data_statistics_compressed.bin"};
+    String[] lookup_table_names = new String[]{"lookup_table_uncompressed.json", "lookup_table_compressed.json"};
+    String[] data_statistics_names = new String[]{"data_statistics_uncompressed.json", "data_statistics_compressed.json"};
 
     InvertedIndex shakespeare_uncompressed_index = new InvertedIndex(document_crawler.getAllDocuments(), index_bin_names[0], lookup_table_names[0], data_statistics_names[0]);
     InvertedIndex shakespeare_compressed_index = new InvertedIndex(document_crawler.getAllDocuments(), index_bin_names[1], lookup_table_names[1], data_statistics_names[1]);
@@ -125,5 +125,11 @@ public class TopLevelClass{
     TimingQueries.printTimingForQueries(new_shakespeare_uncompressed_index, random_terms_14);
 
     System.out.println("====================== Evaluation4 complete ======================");
+
+    System.out.println("====================== Scene and Play Statistics ======================");
+    System.out.println("Average scene length: " + new_shakespeare_compressed_index.getAverageSceneLength() + " words");
+    System.out.println("Shortest scene(id): " + new_shakespeare_compressed_index.getShortestScene());
+    System.out.println("Longest play(id): " + new_shakespeare_compressed_index.getLongestPlay());
+    System.out.println("Shortest play(id): " + new_shakespeare_compressed_index.getShortestPlay());
   }
 }

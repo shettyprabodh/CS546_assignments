@@ -13,9 +13,16 @@ public class InvertedIndex{
   String index_file_name = null;
   String lookup_table_json_name = null;
   String data_statistics_json_name = null;
+  String scene_id_map_json_name = "scene_id_map.json";
+  String play_id_map_json_name = "play_id_map.json";
+  String doc_length_name = "doc_length.json";
+
   Tokenizer tokenizer = null;
   private boolean is_lookup_table_loaded = false;
   private boolean are_data_statistics_loaded = false;
+  private boolean is_scene_id_map_loaded = false;
+  private boolean is_play_id_map_loaded = false;
+  private boolean is_doc_length_loaded = false;
 
   // Data statistics
   private int last_doc_id = 0;
@@ -103,11 +110,11 @@ public class InvertedIndex{
       // Updating play id map
       ArrayList<Integer> correct_play_id_doc_list = null;
       if(this.play_id_map.containsKey(current_doc.play_id)){
-        correct_play_id_doc_list = this.play_id_map.get(current_doc.scene_id);
+        correct_play_id_doc_list = this.play_id_map.get(current_doc.play_id);
       }
       else{
         correct_play_id_doc_list = new ArrayList<Integer>();
-        this.scene_id_map.put(current_doc.scene_id, correct_play_id_doc_list);
+        this.play_id_map.put(current_doc.play_id, correct_play_id_doc_list);
       }
       correct_play_id_doc_list.add(current_doc.doc_id);
 
@@ -237,11 +244,79 @@ public class InvertedIndex{
     }
   }
 
+  private void flushSceneIdMap(){
+    Set<String> scene_ids = this.scene_id_map.keySet();
+    JSONObject scene_id_map = new JSONObject();
+
+    for(String scene_id: scene_ids){
+      ArrayList<Integer> current_doc_list = this.scene_id_map.get(scene_id);
+      JSONArray doc_ids = new JSONArray();
+
+      for(Integer doc_id: current_doc_list){
+        doc_ids.add(doc_id);
+      }
+
+      scene_id_map.put(scene_id, doc_ids);
+    }
+
+    try(FileWriter file = new FileWriter(this.scene_id_map_json_name)){
+      file.write(scene_id_map.toJSONString());
+      file.flush();
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
+  private void flushPlayIdMap(){
+    Set<String> play_ids = this.play_id_map.keySet();
+    JSONObject play_id_map = new JSONObject();
+
+    for(String play_id: play_ids){
+      ArrayList<Integer> current_doc_list = this.play_id_map.get(play_id);
+      JSONArray doc_ids = new JSONArray();
+
+      for(Integer doc_id: current_doc_list){
+        doc_ids.add(doc_id);
+      }
+
+      play_id_map.put(play_id, doc_ids);
+    }
+
+    try(FileWriter file = new FileWriter(this.play_id_map_json_name)){
+      file.write(play_id_map.toJSONString());
+      file.flush();
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
+  private void flushDocLength(){
+    Set<Integer> doc_ids = this.doc_length.keySet();
+    JSONObject doc_length_map = new JSONObject();
+
+    for(Integer doc_id: doc_ids){
+      doc_length_map.put(doc_id, this.doc_length.get(doc_id));
+    }
+
+    try(FileWriter file = new FileWriter(this.doc_length_name)){
+      file.write(doc_length_map.toJSONString());
+      file.flush();
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
   public void write(boolean is_compression_required){
     this.setCompressionByte(is_compression_required);
     this.flushToDisk(is_compression_required);
     this.flushLookupTable();
     this.flushDataStatistics();
+    this.flushSceneIdMap();
+    this.flushPlayIdMap();
+    this.flushDocLength();
   }
 
 
@@ -324,6 +399,88 @@ public class InvertedIndex{
     }
   }
 
+  public void loadSceneIdMap(){
+    try{
+      FileReader file = new FileReader(this.scene_id_map_json_name);
+      JSONParser parser = new JSONParser();
+      JSONObject scene_id_map = (JSONObject) parser.parse(file);
+
+      Set<String> scene_ids = scene_id_map.keySet();
+
+      for(String scene_id: scene_ids){
+        JSONArray doc_ids = (JSONArray)scene_id_map.get(scene_id);
+        ArrayList<Integer> doc_ids_list = new ArrayList<Integer>();
+
+        for(int i=0; i<doc_ids.size(); i++){
+          doc_ids_list.add(((Long)doc_ids.get(i)).intValue());
+        }
+
+
+        this.scene_id_map.put(scene_id, doc_ids_list);
+      }
+
+      this.is_scene_id_map_loaded = true;
+    }
+    catch(ParseException e){
+      System.out.println(e);
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
+  public void loadPlayIdMap(){
+    try{
+      FileReader file = new FileReader(this.play_id_map_json_name);
+      JSONParser parser = new JSONParser();
+      JSONObject play_id_map = (JSONObject) parser.parse(file);
+
+      Set<String> play_ids = play_id_map.keySet();
+
+      for(String play_id: play_ids){
+        JSONArray doc_ids = (JSONArray)play_id_map.get(play_id);
+        ArrayList<Integer> doc_ids_list = new ArrayList<Integer>();
+
+        for(int i=0; i<doc_ids.size(); i++){
+          doc_ids_list.add(((Long)doc_ids.get(i)).intValue());
+        }
+
+
+        this.play_id_map.put(play_id, doc_ids_list);
+      }
+
+      this.is_play_id_map_loaded = true;
+    }
+    catch(ParseException e){
+      System.out.println(e);
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
+  public void loadDocLength(){
+    try{
+      FileReader file = new FileReader(this.doc_length_name);
+      JSONParser parser = new JSONParser();
+      JSONObject doc_length_map = (JSONObject) parser.parse(file);
+
+      Set<String> doc_ids = doc_length_map.keySet();
+
+      for(String doc_id: doc_ids){
+        this.doc_length.put(Integer.parseInt(doc_id), ((Long)doc_length_map.get(doc_id)).intValue());
+      }
+
+      this.is_doc_length_loaded = true;
+    }
+    catch(ParseException e){
+      System.out.println(e);
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
   public boolean isLookupTableLoaded(){
     return this.is_lookup_table_loaded;
   }
@@ -343,6 +500,119 @@ public class InvertedIndex{
     }
   }
 
+  public double getAverageSceneLength(){
+    if(!this.is_scene_id_map_loaded){
+      this.loadSceneIdMap();
+    }
+    if(!this.is_doc_length_loaded){
+      this.loadDocLength();
+    }
+
+    Set<String> scene_ids = (Set<String>)this.scene_id_map.keySet();
+    long total_length = 0;
+    for(String scene_id: scene_ids){
+      ArrayList<Integer> doc_ids = this.scene_id_map.get(scene_id);
+
+      for(Integer doc_id: doc_ids){
+        if(this.doc_length.containsKey(doc_id)){
+          total_length += (this.doc_length.get(doc_id));
+        }
+      }
+    }
+
+    return (double)total_length/(double)scene_ids.size();
+  }
+
+  public String getShortestScene(){
+    if(!this.is_scene_id_map_loaded){
+      this.loadSceneIdMap();
+    }
+    if(!this.is_doc_length_loaded){
+      this.loadDocLength();
+    }
+
+    Set<String> scene_ids = (Set<String>)this.scene_id_map.keySet();
+    int shortest_length = Integer.MAX_VALUE;
+    String shortest_scene = null;
+    for(String scene_id: scene_ids){
+      ArrayList<Integer> doc_ids = this.scene_id_map.get(scene_id);
+      int total_length = 0;
+
+      for(Integer doc_id: doc_ids){
+        if(this.doc_length.containsKey(doc_id)){
+          total_length += (this.doc_length.get(doc_id));
+        }
+      }
+
+      if(shortest_length > total_length){
+        shortest_length = total_length;
+        shortest_scene = scene_id;
+      }
+    }
+
+    return shortest_scene;
+  }
+
+  public String getLongestPlay(){
+    if(!this.is_play_id_map_loaded){
+      this.loadPlayIdMap();
+    }
+    if(!this.is_doc_length_loaded){
+      this.loadDocLength();
+    }
+
+    Set<String> play_ids = (Set<String>)this.play_id_map.keySet();
+    int longest_length = Integer.MIN_VALUE;
+    String longest_play = null;
+    for(String play_id: play_ids){
+      ArrayList<Integer> doc_ids = this.play_id_map.get(play_id);
+      int total_length = 0;
+
+      for(Integer doc_id: doc_ids){
+        if(this.doc_length.containsKey(doc_id)){
+          total_length += (this.doc_length.get(doc_id));
+        }
+      }
+
+      if(longest_length < total_length){
+        longest_length = total_length;
+        longest_play = play_id;
+      }
+    }
+
+    return longest_play;
+  }
+
+  public String getShortestPlay(){
+    if(!this.is_play_id_map_loaded){
+      this.loadPlayIdMap();
+    }
+    if(!this.is_doc_length_loaded){
+      this.loadDocLength();
+    }
+
+    Set<String> play_ids = (Set<String>)this.play_id_map.keySet();
+    int shortest_length = Integer.MAX_VALUE;
+    String shortest_play = null;
+    for(String play_id: play_ids){
+      ArrayList<Integer> doc_ids = this.play_id_map.get(play_id);
+      int total_length = 0;
+
+      for(Integer doc_id: doc_ids){
+        if(this.doc_length.containsKey(doc_id)){
+          total_length += (this.doc_length.get(doc_id));
+        }
+      }
+
+      if(shortest_length > total_length){
+        shortest_length = total_length;
+        shortest_play = play_id;
+      }
+    }
+
+    return shortest_play;
+  }
+
   // Assumes query has been stemmed
   // Returns an Arraylist(of size k) of doc_ids with descending scores
   public ArrayList<Integer> getScores(String query, Integer result_size){
@@ -351,6 +621,7 @@ public class InvertedIndex{
     }
     if(!this.areDataStatisticsLoaded()){
       this.loadDataStatistics();
+      this.loadDocLength();
     }
 
     PriorityQueue<PairLongInteger> R = new PriorityQueue<PairLongInteger>();
