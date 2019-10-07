@@ -20,10 +20,6 @@ public class InvertedList{
   // Term related meta data
   int term_frequency = 0;
 
-  // For debugging purposes
-  byte[] encoded_list = null;
-  ArrayList<Integer> decoded_list = null;
-
   InvertedList(){
     this.postings = new ArrayList<DocumentPostings>();
     this.current_postings_pointer = 0;
@@ -82,7 +78,6 @@ public class InvertedList{
     DocumentPostings correct_doc_postings = null;
 
     // Search for doc posting
-    // TODO: Can be improved using HashSet or using the ordering of doc_ids
     for(int i=0; i<this.postings.size(); i++){
       DocumentPostings doc_postings = this.postings.get(i);
       if(doc_postings.getDocId() == doc_id){
@@ -125,7 +120,6 @@ public class InvertedList{
     return num_of_integers;
   }
 
-  // TODO: Need to complete v_byte compression
   private byte[] getEncodedList(boolean is_compression_required){
     int[] encoded_list = new int[this.getEncodedListSize()];
 
@@ -145,7 +139,6 @@ public class InvertedList{
       }
     }
 
-    // TODO: Need to complete v_byte compression
     // Byte related compressions
     int num_bytes = (encoded_list.length)*(Integer.BYTES);
     ByteBuffer byte_buffer = ByteBuffer.allocate(num_bytes);
@@ -184,7 +177,6 @@ public class InvertedList{
       this.offset = current_offset;
       writer.write(encoded_list);
       this.num_bytes = (int)(writer.getFilePointer() - current_offset);
-      this.encoded_list = encoded_list;
     }
     catch(IOException e){
       System.out.println(e);
@@ -253,7 +245,6 @@ public class InvertedList{
     return result;
   }
 
-  // TODO: Need to handle v_byte decoding
   // int[] needs size before hand. Since calculating it is a bit pain,
   // I am using ArrayList instead.
   private ArrayList<Integer> getDecodedList(byte[] byte_array){
@@ -316,7 +307,6 @@ public class InvertedList{
     }
     byte[] byte_array = this.readFromDisk(reader);
     ArrayList<Integer> decoded_list = this.getDecodedList(byte_array);
-    this.decoded_list = decoded_list;
     this.reconstructPostings(decoded_list);
     this.are_postings_loaded = true;
   }

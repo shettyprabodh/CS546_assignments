@@ -21,7 +21,10 @@ public class InvertedIndex{
   private int last_doc_id = 0;
   private int document_count = 0;
   // NOTE: TreeMap can be used here if we want to save space
-  private Hashtable term_statistics = null;
+  private Hashtable<String, TermStatistics> term_statistics = null;
+  private Hashtable<String, ArrayList<Integer>> scene_id_map = null;
+  private Hashtable<String, ArrayList<Integer>> play_id_map = null;
+  private Hashtable<Integer, Integer> doc_length = null;
 
   // File accessors
   RandomAccessFile writer = null;
@@ -37,6 +40,9 @@ public class InvertedIndex{
     this.is_lookup_table_loaded = false;
     this.are_data_statistics_loaded = false;
     this.term_statistics = new Hashtable<String, TermStatistics>();
+    this.scene_id_map = new Hashtable<String, ArrayList<Integer>>();
+    this.play_id_map = new Hashtable<String, ArrayList<Integer>>();
+    this.doc_length = new Hashtable<Integer, Integer>();
   }
 
   public InvertedIndex(String index_file_name, String lookup_table_json_name, String data_statistics_json_name){
@@ -49,6 +55,9 @@ public class InvertedIndex{
     this.is_lookup_table_loaded = false;
     this.are_data_statistics_loaded = false;
     this.term_statistics = new Hashtable<String, TermStatistics>();
+    this.scene_id_map = new Hashtable<String, ArrayList<Integer>>();
+    this.play_id_map = new Hashtable<String, ArrayList<Integer>>();
+    this.doc_length = new Hashtable<Integer, Integer>();
   }
 
   public int getLastDocID(){
@@ -79,6 +88,30 @@ public class InvertedIndex{
 
       this.last_doc_id = (this.last_doc_id < current_doc.doc_id) ? current_doc.doc_id : this.last_doc_id;
       this.document_count++;
+
+      // Updating scene id map
+      ArrayList<Integer> correct_scene_id_doc_list = null;
+      if(this.scene_id_map.containsKey(current_doc.scene_id)){
+        correct_scene_id_doc_list = this.scene_id_map.get(current_doc.scene_id);
+      }
+      else{
+        correct_scene_id_doc_list = new ArrayList<Integer>();
+        this.scene_id_map.put(current_doc.scene_id, correct_scene_id_doc_list);
+      }
+      correct_scene_id_doc_list.add(current_doc.doc_id);
+
+      // Updating play id map
+      ArrayList<Integer> correct_play_id_doc_list = null;
+      if(this.play_id_map.containsKey(current_doc.play_id)){
+        correct_play_id_doc_list = this.play_id_map.get(current_doc.scene_id);
+      }
+      else{
+        correct_play_id_doc_list = new ArrayList<Integer>();
+        this.scene_id_map.put(current_doc.scene_id, correct_play_id_doc_list);
+      }
+      correct_play_id_doc_list.add(current_doc.doc_id);
+
+      this.doc_length.put(current_doc.doc_id, terms.length);
 
       for(int term_position=0; term_position < terms.length; term_position++){
         String current_term = terms[term_position];
@@ -145,7 +178,6 @@ public class InvertedIndex{
 
     for(String term: terms){
       InvertedList current_inverted_list = this.index.get(term);
-      // TODO: Update is_compression_required here
       current_inverted_list.flushToDisk(this.getWriter(), is_compression_required);
     }
 
@@ -180,16 +212,18 @@ public class InvertedIndex{
 
     Set<String> terms = this.index.keySet();
     JSONObject data_statistics = new JSONObject();
+    JSONObject term_statistics = new JSONObject();
 
     data_statistics.put("last_doc_id", this.getLastDocID());
     data_statistics.put("document_count", this.getDocumentCount());
 
     for(String term: terms){
       InvertedList current_inverted_list = this.index.get(term);
-      JSONObject term_statistics = new JSONObject();
+      JSONObject temp_statistics = new JSONObject();
+      temp_statistics.put("term_frequency", current_inverted_list.getTermFrequency(this.getReader()));
+      temp_statistics.put("document_count", current_inverted_list.getDocumentCount(this.getReader()));
 
-      term_statistics.put("term_frequency", current_inverted_list.getTermFrequency(this.getReader()));
-      term_statistics.put("document_count", current_inverted_list.getDocumentCount(this.getReader()));
+      term_statistics.put(term, temp_statistics);
     }
 
     data_statistics.put("term_statistics", term_statistics);

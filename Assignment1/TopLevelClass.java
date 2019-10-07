@@ -52,7 +52,6 @@ public class TopLevelClass{
 
     System.out.println("====================== Evaluation2: Fetching random terms ======================");
     // Use this only once. Uncomment below code to run.
-    // query_terms.json already created
 
     // ArrayList<String> term_list = new ArrayList<String>();
     // term_list.addAll(new_shakespeare_compressed_vocab);
@@ -110,10 +109,10 @@ public class TopLevelClass{
     System.out.println("====================== Part1: Timing with 7 term queries ======================");
     ArrayList<ArrayList<String>> random_terms_7 = QueryTermsReader.fetchQueryTerms("query_terms_7.json");
 
-    System.out.println("Timing for compressed indices");
+    System.out.println("====================== Timings for compressed indices ======================");
     TimingQueries.printTimingForQueries(new_shakespeare_compressed_index, random_terms_7);
 
-    System.out.println("Timing for uncompressed indices");
+    System.out.println("====================== Timings for uncompressed indices ======================");
     TimingQueries.printTimingForQueries(new_shakespeare_uncompressed_index, random_terms_7);
 
     System.out.println("====================== Part2: Timing with 14 term queries ======================");
