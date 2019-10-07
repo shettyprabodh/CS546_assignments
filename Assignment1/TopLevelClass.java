@@ -1,10 +1,6 @@
 import java.util.*;
-import index.Crawler;
 import index.*;
 import java.nio.*;
-import java.io.*;
-import org.json.simple.*;
-import org.json.simple.parser.*;
 
 public class TopLevelClass{
   public static void main(String[] args){
@@ -47,6 +43,11 @@ public class TopLevelClass{
     Set<String> new_shakespeare_uncompressed_vocab = new_shakespeare_uncompressed_index.getVocabulary();
     Set<String> new_shakespeare_compressed_vocab = new_shakespeare_compressed_index.getVocabulary();
     System.out.println("Are vocabs equal? :-" + (new_shakespeare_uncompressed_vocab.equals(new_shakespeare_compressed_vocab)));
+
+    double dc_uncompressed = new_shakespeare_uncompressed_index.getDicesCoefficient("the", "noble");
+    double dc_compressed = new_shakespeare_compressed_index.getDicesCoefficient("the", "noble");
+    System.out.println("To further show both indices are same. I have calculated Dice's coefficient for \"the\" and \"noble\". un-compressed score:" + dc_uncompressed + " compressedscore: " + dc_compressed);
+
     System.out.println("====================== Evaluation1 complete ======================");
 
     System.out.println("====================== Evaluation2: Fetching random terms ======================");
@@ -79,31 +80,7 @@ public class TopLevelClass{
     System.out.println("====================== Evaluation2 complete ======================");
 
     System.out.println("====================== Evaluation3: Dice's coefficient ======================");
-    ArrayList<ArrayList<String>> random_query_terms_7 = new ArrayList<ArrayList<String>>();
-
-    // First fetch random terms from query_terms_7.json
-    try{
-      FileReader file = new FileReader("query_terms_7.json");
-      JSONParser parser = new JSONParser();
-      JSONArray random_terms = (JSONArray) parser.parse(file);
-
-      for(int i=0; i<random_terms.size(); i++){
-        JSONArray current_random_terms = (JSONArray) random_terms.get(i);
-        ArrayList<String> temp_list = new ArrayList<String>();
-
-        for(int j=0; j<current_random_terms.size(); j++){
-          temp_list.add((String)current_random_terms.get(j));
-        }
-
-        random_query_terms_7.add(temp_list);
-      }
-    }
-    catch(ParseException e){
-      System.out.println(e);
-    }
-    catch(IOException e){
-      System.out.println(e);
-    }
+    ArrayList<ArrayList<String>> random_query_terms_7 = QueryTermsReader.fetchQueryTerms("query_terms_7.json");
 
     for(int i=0; i<random_query_terms_7.size(); i++){
       double top_score = -1.0;
@@ -128,5 +105,26 @@ public class TopLevelClass{
     }
 
     System.out.println("====================== Evaluation3 complete ======================");
+
+    System.out.println("====================== Evaluation4: Compression Hypothesis ======================");
+    System.out.println("====================== Part1: Timing with 7 term queries ======================");
+    ArrayList<ArrayList<String>> random_terms_7 = QueryTermsReader.fetchQueryTerms("query_terms_7.json");
+
+    System.out.println("Timing for compressed indices");
+    TimingQueries.printTimingForQueries(new_shakespeare_compressed_index, random_terms_7);
+
+    System.out.println("Timing for uncompressed indices");
+    TimingQueries.printTimingForQueries(new_shakespeare_uncompressed_index, random_terms_7);
+
+    System.out.println("====================== Part2: Timing with 14 term queries ======================");
+    ArrayList<ArrayList<String>> random_terms_14 = QueryTermsReader.fetchQueryTerms("query_terms_14.json");
+
+    System.out.println("====================== Timings for compressed indices ======================");
+    TimingQueries.printTimingForQueries(new_shakespeare_compressed_index, random_terms_14);
+
+    System.out.println("====================== Timings for uncompressed indices ======================");
+    TimingQueries.printTimingForQueries(new_shakespeare_uncompressed_index, random_terms_14);
+
+    System.out.println("====================== Evaluation4 complete ======================");
   }
 }

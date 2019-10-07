@@ -351,7 +351,6 @@ public class InvertedIndex{
 
     while(R.size() > 0){
       PairLongInteger temp = R.poll();
-      System.out.println("A: " + temp.getA() + " B: " +  temp.getB());
       st.push(new Integer(temp.getB()));
     }
 
