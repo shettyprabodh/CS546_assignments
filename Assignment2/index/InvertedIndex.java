@@ -713,6 +713,21 @@ public class InvertedIndex{
     return shortest_play;
   }
 
+  public Long getTotalWordCount(){
+    if(!this.is_term_count_loaded){
+      this.loadTermCount();
+    }
+    Long total_word_count = new Long(0);
+
+    Set<String> terms = this.term_count.keySet();
+
+    for(String term: terms){
+      total_word_count += (this.term_count.get(term));
+    }
+
+    return total_word_count;
+  }
+
   // Assumes query has been stemmed
   // Returns an Arraylist(of size k) of doc_ids with descending scores
   public ArrayList<Integer> getScores(String query, Integer result_size){

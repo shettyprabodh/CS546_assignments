@@ -33,6 +33,7 @@ public class TopLevelClass{
     System.out.println("====================== Loaded lookup tables ======================");
 
     System.out.println("Avgdl: " + new_shakespeare_index.getAverageDocumentLength());
+    System.out.println("Total word count: " + new_shakespeare_index.getTotalWordCount());
     System.out.println("====================== Querying ======================");
     new_shakespeare_index.getScores("servant guard soldier", 10);
   }
