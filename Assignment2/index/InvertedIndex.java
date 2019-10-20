@@ -20,6 +20,7 @@ public class InvertedIndex{
   String scene_id_map_json_name = "scene_id_map.json";
   String play_id_map_json_name = "play_id_map.json";
   String doc_length_name = "doc_length.json";
+  String term_count_name = "term_count.json";
 
   Tokenizer tokenizer = null;
   private boolean is_lookup_table_loaded = false;
@@ -27,6 +28,7 @@ public class InvertedIndex{
   private boolean is_scene_id_map_loaded = false;
   private boolean is_play_id_map_loaded = false;
   private boolean is_doc_length_loaded = false;
+  private boolean is_term_count_loaded = false;
 
   // Data statistics
   private int last_doc_id = 0;
@@ -36,6 +38,7 @@ public class InvertedIndex{
   private Hashtable<String, ArrayList<Integer>> scene_id_map = null;
   private Hashtable<String, ArrayList<Integer>> play_id_map = null;
   private Hashtable<Integer, Integer> doc_length = null;
+  private Hashtable<String, Long> term_count = null;
 
   // File accessors
   RandomAccessFile writer = null;
@@ -57,6 +60,7 @@ public class InvertedIndex{
     this.scene_id_map = new Hashtable<String, ArrayList<Integer>>();
     this.play_id_map = new Hashtable<String, ArrayList<Integer>>();
     this.doc_length = new Hashtable<Integer, Integer>();
+    this.term_count = new Hashtable<String, Long>();
 
     this.retrieval_model_name = retrieval_model_name;
     this.retrieval_model = new RetrievalModel();
@@ -78,6 +82,7 @@ public class InvertedIndex{
     this.scene_id_map = new Hashtable<String, ArrayList<Integer>>();
     this.play_id_map = new Hashtable<String, ArrayList<Integer>>();
     this.doc_length = new Hashtable<Integer, Integer>();
+    this.term_count = new Hashtable<String, Long>();
 
     this.retrieval_model_name = retrieval_model_name;
     this.retrieval_model = new RetrievalModel();
@@ -139,6 +144,7 @@ public class InvertedIndex{
       for(int term_position=0; term_position < terms.length; term_position++){
         String current_term = terms[term_position];
         InvertedList correct_inverted_list = null;
+        Long current_term_count = new Long(0);
 
         // Fetch InvertedList related to current_term
         if(this.index.containsKey(current_term)){
@@ -148,6 +154,16 @@ public class InvertedIndex{
           correct_inverted_list = new InvertedList();
           this.index.put(current_term, correct_inverted_list);
         }
+
+        // Updating/creating terms count to be used in Language Models
+        if(this.term_count.containsKey(current_term)){
+          current_term_count = this.term_count.get(current_term);
+          current_term_count++;
+        }
+        else{
+          current_term_count++;
+        }
+        this.term_count.put(current_term, current_term_count);
 
         // Add posting
         correct_inverted_list.addPosting(current_doc.doc_id, term_position);
@@ -325,6 +341,23 @@ public class InvertedIndex{
     }
   }
 
+  private void flushTermCount(){
+    Set<String> terms = this.term_count.keySet();
+    JSONObject term_count_map = new JSONObject();
+
+    for(String term: terms){
+      term_count_map.put(term, this.term_count.get(term));
+    }
+
+    try(FileWriter file = new FileWriter(this.term_count_name)){
+      file.write(term_count_map.toJSONString());
+      file.flush();
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
   public void write(boolean is_compression_required){
     this.setCompressionByte(is_compression_required);
     this.flushToDisk(is_compression_required);
@@ -333,6 +366,7 @@ public class InvertedIndex{
     this.flushSceneIdMap();
     this.flushPlayIdMap();
     this.flushDocLength();
+    this.flushTermCount();
   }
 
 
@@ -496,6 +530,27 @@ public class InvertedIndex{
       System.out.println(e);
     }
   }
+
+  public void loadTermCount(){
+    try{
+      FileReader file = new FileReader(this.term_count_name);
+      JSONParser parser = new JSONParser();
+      JSONObject term_count_map = (JSONObject) parser.parse(file);
+
+      Set<String> terms = term_count_map.keySet();
+
+      for(String term: terms){
+        this.term_count.put(term, (Long)term_count_map.get(term));
+      }
+
+      this.is_term_count_loaded = true;
+    }
+    catch(ParseException e){
+      System.out.println(e);
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }  }
 
   public boolean isLookupTableLoaded(){
     return this.is_lookup_table_loaded;
@@ -667,6 +722,9 @@ public class InvertedIndex{
     if(!this.areDataStatisticsLoaded()){
       this.loadDataStatistics();
       this.loadDocLength();
+    }
+    if(!this.is_term_count_loaded){
+      this.loadTermCount();
     }
 
     PriorityQueue<PairDoubleInteger> R = new PriorityQueue<PairDoubleInteger>();
