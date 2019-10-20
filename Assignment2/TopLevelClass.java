@@ -35,6 +35,29 @@ public class TopLevelClass{
     System.out.println("Avgdl: " + new_shakespeare_index.getAverageDocumentLength());
     System.out.println("Total word count: " + new_shakespeare_index.getTotalWordCount());
     System.out.println("====================== Querying ======================");
+    String[] queries = new String[]{"the king queen royalty",
+                                    "servant guard soldier",
+                                    "hope dream sleep",
+                                    "ghost spirit",
+                                    "fool jester player",
+                                    "to be or not to be",
+                                    "alas",
+                                    "alas poor",
+                                    "alas poor yorick",
+                                    "antony strumpet"};
     new_shakespeare_index.getScores("servant guard soldier", 10);
+    for(int i=0; i<queries.length; i++){
+      String query = queries[i];
+
+      ArrayList<Integer> doc_ids = new_shakespeare_index.getScores(query, 10);
+      ArrayList<String> scene_ids = new ArrayList<String>();
+
+      for(Integer doc_id: doc_ids){
+        scene_ids.add(new_shakespeare_index.getSceneIdFromDocId(doc_id));
+      }
+
+      System.out.println("Results for query(" + i + ") " + query + " :");
+      System.out.println("scene_ids: " + scene_ids);
+    }
   }
 }

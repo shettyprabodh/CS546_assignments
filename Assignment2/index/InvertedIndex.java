@@ -21,6 +21,7 @@ public class InvertedIndex{
   String play_id_map_json_name = "play_id_map.json";
   String doc_length_name = "doc_length.json";
   String term_count_name = "term_count.json";
+  String doc_scene_id_map_name = "doc_scene_id.json";
 
   Tokenizer tokenizer = null;
   private boolean is_lookup_table_loaded = false;
@@ -29,6 +30,7 @@ public class InvertedIndex{
   private boolean is_play_id_map_loaded = false;
   private boolean is_doc_length_loaded = false;
   private boolean is_term_count_loaded = false;
+  private boolean is_doc_scene_id_map_loaded = false;
 
   // Data statistics
   private int last_doc_id = 0;
@@ -39,6 +41,7 @@ public class InvertedIndex{
   private Hashtable<String, ArrayList<Integer>> play_id_map = null;
   private Hashtable<Integer, Integer> doc_length = null;
   private Hashtable<String, Long> term_count = null;
+  private Hashtable<Integer, String> doc_scene_id_map = null;
 
   // File accessors
   RandomAccessFile writer = null;
@@ -61,6 +64,7 @@ public class InvertedIndex{
     this.play_id_map = new Hashtable<String, ArrayList<Integer>>();
     this.doc_length = new Hashtable<Integer, Integer>();
     this.term_count = new Hashtable<String, Long>();
+    this.doc_scene_id_map = new Hashtable<Integer, String>();
 
     this.retrieval_model_name = retrieval_model_name;
     this.retrieval_model = new RetrievalModel();
@@ -83,6 +87,7 @@ public class InvertedIndex{
     this.play_id_map = new Hashtable<String, ArrayList<Integer>>();
     this.doc_length = new Hashtable<Integer, Integer>();
     this.term_count = new Hashtable<String, Long>();
+    this.doc_scene_id_map = new Hashtable<Integer, String>();
 
     this.retrieval_model_name = retrieval_model_name;
     this.retrieval_model = new RetrievalModel();
@@ -140,6 +145,7 @@ public class InvertedIndex{
       correct_play_id_doc_list.add(current_doc.doc_id);
 
       this.doc_length.put(current_doc.doc_id, terms.length);
+      this.doc_scene_id_map.put(current_doc.doc_id, current_doc.scene_id);
 
       for(int term_position=0; term_position < terms.length; term_position++){
         String current_term = terms[term_position];
@@ -341,6 +347,23 @@ public class InvertedIndex{
     }
   }
 
+  private void flushDocScenenIdMap(){
+    Set<Integer> doc_ids = this.doc_scene_id_map.keySet();
+    JSONObject doc_scene_id_map = new JSONObject();
+
+    for(Integer doc_id: doc_ids){
+      doc_scene_id_map.put(doc_id, this.doc_scene_id_map.get(doc_id));
+    }
+
+    try(FileWriter file = new FileWriter(this.doc_scene_id_map_name)){
+      file.write(doc_scene_id_map.toJSONString());
+      file.flush();
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
   private void flushTermCount(){
     Set<String> terms = this.term_count.keySet();
     JSONObject term_count_map = new JSONObject();
@@ -367,6 +390,7 @@ public class InvertedIndex{
     this.flushPlayIdMap();
     this.flushDocLength();
     this.flushTermCount();
+    this.flushDocScenenIdMap();
   }
 
 
@@ -550,7 +574,38 @@ public class InvertedIndex{
     }
     catch(IOException e){
       System.out.println(e);
-    }  }
+    }
+  }
+
+  public void loadDocSceneIdMap(){
+    try{
+      FileReader file = new FileReader(this.doc_scene_id_map_name);
+      JSONParser parser = new JSONParser();
+      JSONObject doc_scene_id_map = (JSONObject) parser.parse(file);
+
+      Set<String> doc_ids = doc_scene_id_map.keySet();
+
+      for(String doc_id: doc_ids){
+        this.doc_scene_id_map.put(Integer.parseInt(doc_id), (String)doc_scene_id_map.get(doc_id));
+      }
+
+      this.is_doc_scene_id_map_loaded = true;
+    }
+    catch(ParseException e){
+      System.out.println(e);
+    }
+    catch(IOException e){
+      System.out.println(e);
+    }
+  }
+
+  public String getSceneIdFromDocId(Integer doc_id){
+    if(!this.is_doc_scene_id_map_loaded){
+      this.loadDocSceneIdMap();
+    }
+
+    return this.doc_scene_id_map.get(doc_id);
+  }
 
   public boolean isLookupTableLoaded(){
     return this.is_lookup_table_loaded;
