@@ -34,6 +34,6 @@ public class TopLevelClass{
 
     System.out.println("Avgdl: " + new_shakespeare_index.getAverageDocumentLength());
     System.out.println("====================== Querying ======================");
-    new_shakespeare_index.getScores("the king queen royalty", 10);
+    new_shakespeare_index.getScores("servant guard soldier", 10);
   }
 }

@@ -390,9 +390,14 @@ public class InvertedList{
     double score = 0.0;
     DocumentPostings doc_postings = this.getPostingsListByDocID(doc_id);
 
+    // TODO: Need to handle background score here
+    if(doc_postings == null){
+      return score;
+    }
+
     // Parameters for BM25
-    int tf = doc_postings.getPositionsSize();
-    int ni = this.getDocumentCount();
+    int tf = doc_postings.getDocumentTermFrequency();
+    int ni = this.getDocumentCount(reader);
 
     params.tf = tf;
     params.ni = ni;
