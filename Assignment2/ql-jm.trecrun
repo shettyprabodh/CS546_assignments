@@ -1,0 +1,112 @@
+Queries:
+the king queen royalty
+servant guard soldier
+hope dream sleep
+ghost spirit
+fool jester player
+to be or not to be
+alas
+alas poor
+alas poor yorick
+antony strumpet
+Results:
+Q1 skip henry_vi_part_2:0.2 1 -20.47237353775274 pshetty-ql-jm-0.1
+Q1 skip henry_viii:1.2 2 -21.276044991847975 pshetty-ql-jm-0.1
+Q1 skip henry_v:4.1 3 -21.900645330029505 pshetty-ql-jm-0.1
+Q1 skip life_and_death_of_king_john:1.0 4 -22.451122289139963 pshetty-ql-jm-0.1
+Q1 skip richard_ii:0.0 5 -22.579359557496467 pshetty-ql-jm-0.1
+Q1 skip richard_ii:1.0 6 -22.81336632339097 pshetty-ql-jm-0.1
+Q1 skip life_and_death_of_king_john:4.0 7 -23.08151607786462 pshetty-ql-jm-0.1
+Q1 skip richard_ii:2.2 8 -23.367882528796734 pshetty-ql-jm-0.1
+Q1 skip winters_tale:4.0 9 -23.425048835960904 pshetty-ql-jm-0.1
+Q1 skip antony_and_cleopatra:0.2 10 -23.454823055299535 pshetty-ql-jm-0.1
+Q2 skip antony_and_cleopatra:3.2 1 -17.949451363252457 pshetty-ql-jm-0.1
+Q2 skip antony_and_cleopatra:3.8 2 -18.18230170954401 pshetty-ql-jm-0.1
+Q2 skip coriolanus:0.6 3 -19.278707205475282 pshetty-ql-jm-0.1
+Q2 skip henry_vi_part_3:3.1 4 -19.793480859197807 pshetty-ql-jm-0.1
+Q2 skip antony_and_cleopatra:4.1 5 -19.79980257202284 pshetty-ql-jm-0.1
+Q2 skip coriolanus:0.9 6 -19.9813909784779 pshetty-ql-jm-0.1
+Q2 skip henry_v:3.3 7 -20.3946489711787 pshetty-ql-jm-0.1
+Q2 skip antony_and_cleopatra:3.5 8 -20.59324936989252 pshetty-ql-jm-0.1
+Q2 skip julius_caesar:3.1 9 -20.761460454759984 pshetty-ql-jm-0.1
+Q2 skip timon_of_athens:2.2 10 -20.890334403895384 pshetty-ql-jm-0.1
+Q3 skip antony_and_cleopatra:1.0 1 -17.92899080626301 pshetty-ql-jm-0.1
+Q3 skip richard_iii:4.2 2 -19.50667600094253 pshetty-ql-jm-0.1
+Q3 skip hamlet:2.0 3 -20.128520054972412 pshetty-ql-jm-0.1
+Q3 skip richard_iii:0.3 4 -20.13567883785396 pshetty-ql-jm-0.1
+Q3 skip richard_iii:3.1 5 -20.6030357599799 pshetty-ql-jm-0.1
+Q3 skip midsummer_nights_dream:3.0 6 -20.807223373900474 pshetty-ql-jm-0.1
+Q3 skip cymbeline:3.1 7 -20.981785273889074 pshetty-ql-jm-0.1
+Q3 skip richard_iii:2.1 8 -21.210688741508726 pshetty-ql-jm-0.1
+Q3 skip measure_for_measure:2.0 9 -21.393214387512206 pshetty-ql-jm-0.1
+Q3 skip romeo_and_juliet:0.3 10 -21.529739225416996 pshetty-ql-jm-0.1
+Q4 skip henry_vi_part_2:0.3 1 -11.207498636744225 pshetty-ql-jm-0.1
+Q4 skip hamlet:0.4 2 -11.330879235691874 pshetty-ql-jm-0.1
+Q4 skip hamlet:0.3 3 -11.475775593701766 pshetty-ql-jm-0.1
+Q4 skip hamlet:0.0 4 -12.265204297669396 pshetty-ql-jm-0.1
+Q4 skip henry_vi_part_1:3.6 5 -12.618486971068513 pshetty-ql-jm-0.1
+Q4 skip julius_caesar:3.2 6 -13.224176940588286 pshetty-ql-jm-0.1
+Q4 skip richard_iii:4.2 7 -13.333847545925577 pshetty-ql-jm-0.1
+Q4 skip winters_tale:4.0 8 -14.042577945520602 pshetty-ql-jm-0.1
+Q4 skip henry_vi_part_1:0.0 9 -14.08421194961121 pshetty-ql-jm-0.1
+Q4 skip julius_caesar:4.0 10 -14.12708551810637 pshetty-ql-jm-0.1
+Q5 skip henry_iv_part_ii:4.4 1 -25.303937695008685 pshetty-ql-jm-0.1
+Q5 skip much_ado_about_nothing:1.0 2 -26.103042418651846 pshetty-ql-jm-0.1
+Q5 skip as_you_like_it:1.6 3 -26.10590889639784 pshetty-ql-jm-0.1
+Q5 skip twelfth_night:1.3 4 -26.14499891849747 pshetty-ql-jm-0.1
+Q5 skip lear:0.3 5 -26.159200363451557 pshetty-ql-jm-0.1
+Q5 skip macbeth:4.4 6 -26.42823597007692 pshetty-ql-jm-0.1
+Q5 skip hamlet:2.1 7 -26.546697923322327 pshetty-ql-jm-0.1
+Q5 skip henry_iv_part_i:2.1 8 -26.737676285257386 pshetty-ql-jm-0.1
+Q5 skip merry_wives_of_windsor:1.0 9 -27.340631442473594 pshetty-ql-jm-0.1
+Q5 skip hamlet:4.0 10 -27.845268215306817 pshetty-ql-jm-0.1
+Q6 skip lear:2.4 1 -24.254993143673925 pshetty-ql-jm-0.1
+Q6 skip pericles:0.2 2 -25.111280997329896 pshetty-ql-jm-0.1
+Q6 skip as_you_like_it:1.5 3 -25.192096838805288 pshetty-ql-jm-0.1
+Q6 skip romeo_and_juliet:3.0 4 -25.249689925259787 pshetty-ql-jm-0.1
+Q6 skip winters_tale:3.1 5 -25.24972268368642 pshetty-ql-jm-0.1
+Q6 skip hamlet:3.3 6 -25.26548652966292 pshetty-ql-jm-0.1
+Q6 skip romeo_and_juliet:2.3 7 -25.267211782502265 pshetty-ql-jm-0.1
+Q6 skip henry_vi_part_1:0.2 8 -25.402487513117947 pshetty-ql-jm-0.1
+Q6 skip twelfth_night:3.0 9 -25.40425146257145 pshetty-ql-jm-0.1
+Q6 skip measure_for_measure:1.1 10 -25.629107376116743 pshetty-ql-jm-0.1
+Q7 skip twelfth_night:1.1 1 -5.3123949902569505 pshetty-ql-jm-0.1
+Q7 skip two_gentlemen_of_verona:1.1 2 -5.347021391546758 pshetty-ql-jm-0.1
+Q7 skip titus_andronicus:2.1 3 -5.63683360160406 pshetty-ql-jm-0.1
+Q7 skip two_gentlemen_of_verona:3.3 4 -5.6444258904019184 pshetty-ql-jm-0.1
+Q7 skip othello:4.0 5 -5.7873771275778125 pshetty-ql-jm-0.1
+Q7 skip hamlet:3.2 6 -5.823556720141838 pshetty-ql-jm-0.1
+Q7 skip richard_ii:0.1 7 -5.8521986837044695 pshetty-ql-jm-0.1
+Q7 skip twelfth_night:3.1 8 -5.960015453379352 pshetty-ql-jm-0.1
+Q7 skip othello:3.1 9 -5.981785148392318 pshetty-ql-jm-0.1
+Q7 skip alls_well_that_ends_well:2.3 10 -5.994980205602135 pshetty-ql-jm-0.1
+Q8 skip twelfth_night:1.1 1 -10.215099593514708 pshetty-ql-jm-0.1
+Q8 skip titus_andronicus:2.1 2 -10.577917412179024 pshetty-ql-jm-0.1
+Q8 skip two_gentlemen_of_verona:1.1 3 -10.684835775501483 pshetty-ql-jm-0.1
+Q8 skip timon_of_athens:3.1 4 -10.890506293930677 pshetty-ql-jm-0.1
+Q8 skip two_gentlemen_of_verona:3.3 5 -11.605212570737706 pshetty-ql-jm-0.1
+Q8 skip macbeth:3.1 6 -11.883533395235307 pshetty-ql-jm-0.1
+Q8 skip much_ado_about_nothing:2.4 7 -12.068536522310708 pshetty-ql-jm-0.1
+Q8 skip measure_for_measure:0.3 8 -12.082148666495115 pshetty-ql-jm-0.1
+Q8 skip winters_tale:3.2 9 -12.353034714932997 pshetty-ql-jm-0.1
+Q8 skip lear:2.1 10 -12.37131598096616 pshetty-ql-jm-0.1
+Q9 skip hamlet:4.0 1 -22.965814756422475 pshetty-ql-jm-0.1
+Q9 skip twelfth_night:1.1 2 -25.53357137000446 pshetty-ql-jm-0.1
+Q9 skip titus_andronicus:2.1 3 -25.896389188668774 pshetty-ql-jm-0.1
+Q9 skip two_gentlemen_of_verona:1.1 4 -26.003307551991234 pshetty-ql-jm-0.1
+Q9 skip timon_of_athens:3.1 5 -26.20897807042043 pshetty-ql-jm-0.1
+Q9 skip two_gentlemen_of_verona:3.3 6 -26.923684347227457 pshetty-ql-jm-0.1
+Q9 skip macbeth:3.1 7 -27.202005171725055 pshetty-ql-jm-0.1
+Q9 skip much_ado_about_nothing:2.4 8 -27.38700829880046 pshetty-ql-jm-0.1
+Q9 skip measure_for_measure:0.3 9 -27.400620442984867 pshetty-ql-jm-0.1
+Q9 skip winters_tale:3.2 10 -27.671506491422747 pshetty-ql-jm-0.1
+Q10 skip antony_and_cleopatra:0.0 1 -10.244666049463023 pshetty-ql-jm-0.1
+Q10 skip antony_and_cleopatra:4.1 2 -13.99766830674996 pshetty-ql-jm-0.1
+Q10 skip othello:4.0 3 -15.565966163054735 pshetty-ql-jm-0.1
+Q10 skip merchant_of_venice:1.5 4 -15.582698454775844 pshetty-ql-jm-0.1
+Q10 skip antony_and_cleopatra:3.4 5 -15.849819075777773 pshetty-ql-jm-0.1
+Q10 skip antony_and_cleopatra:2.8 6 -15.871293625631276 pshetty-ql-jm-0.1
+Q10 skip henry_vi_part_1:0.4 7 -15.87166627424319 pshetty-ql-jm-0.1
+Q10 skip richard_iii:2.3 8 -16.103336520998745 pshetty-ql-jm-0.1
+Q10 skip antony_and_cleopatra:3.9 9 -16.158479894773006 pshetty-ql-jm-0.1
+Q10 skip antony_and_cleopatra:3.13 10 -16.36780538216645 pshetty-ql-jm-0.1

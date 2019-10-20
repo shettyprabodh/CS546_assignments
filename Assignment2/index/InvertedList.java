@@ -442,6 +442,11 @@ public class InvertedList{
 
       score = retrieval_model.dirichletScoring(params);
     }
+    else{
+      // Default count based scoring
+      int tf = (doc_postings != null) ? doc_postings.getDocumentTermFrequency() : 0;
+      score = (double)tf;
+    }
 
     return score;
   }

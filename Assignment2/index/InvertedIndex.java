@@ -11,7 +11,6 @@ public class InvertedIndex{
   Hashtable<String, InvertedList> index = null;
 
   // Scoring models
-  String retrieval_model_name = null;
   RetrievalModel retrieval_model = null;
 
   String index_file_name = null;
@@ -47,7 +46,7 @@ public class InvertedIndex{
   RandomAccessFile writer = null;
   RandomAccessFile reader = null;
 
-  public InvertedIndex(ArrayList<Document> documents, String index_file_name, String lookup_table_json_name, String data_statistics_json_name, String retrieval_model_name){
+  public InvertedIndex(ArrayList<Document> documents, String index_file_name, String lookup_table_json_name, String data_statistics_json_name){
     this.raw_data = documents;
     this.index = new Hashtable<String, InvertedList>();
 
@@ -66,11 +65,10 @@ public class InvertedIndex{
     this.term_count = new Hashtable<String, Long>();
     this.doc_scene_id_map = new Hashtable<Integer, String>();
 
-    this.retrieval_model_name = retrieval_model_name;
     this.retrieval_model = new RetrievalModel();
   }
 
-  public InvertedIndex(String index_file_name, String lookup_table_json_name, String data_statistics_json_name, String retrieval_model_name){
+  public InvertedIndex(String index_file_name, String lookup_table_json_name, String data_statistics_json_name){
     this.raw_data = null;
     this.index = new Hashtable<String, InvertedList>();
 
@@ -89,7 +87,6 @@ public class InvertedIndex{
     this.term_count = new Hashtable<String, Long>();
     this.doc_scene_id_map = new Hashtable<Integer, String>();
 
-    this.retrieval_model_name = retrieval_model_name;
     this.retrieval_model = new RetrievalModel();
   }
 
@@ -785,7 +782,7 @@ public class InvertedIndex{
 
   // Assumes query has been stemmed
   // Returns an Arraylist(of size k) of doc_ids with descending scores
-  public ArrayList<Integer> getScores(String query, Integer result_size){
+  public ArrayList<PairDoubleInteger> getScores(String query, Integer result_size, String retrieval_model_name){
     if(!this.isLookupTableLoaded()){
       this.loadLookupTable();
     }
@@ -832,7 +829,7 @@ public class InvertedIndex{
         retrieval_model_params.total_word_count = total_word_count;
         retrieval_model_params.qf = query_term_frequency;
 
-        total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.retrieval_model, this.retrieval_model_name, retrieval_model_params, this.getReader());
+        total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.retrieval_model, retrieval_model_name, retrieval_model_params, this.getReader());
       }
 
       R.add(new PairDoubleInteger(total_score, doc_id));
@@ -843,17 +840,16 @@ public class InvertedIndex{
       }
     }
 
-    ArrayList<Integer> result = new ArrayList<Integer>();
+    ArrayList<PairDoubleInteger> result = new ArrayList<PairDoubleInteger>();
     Stack st = new Stack();
 
     while(R.size() > 0){
       PairDoubleInteger temp = R.poll();
-      System.out.println(temp);
-      st.push(new Integer(temp.getB()));
+      st.push(temp);
     }
 
     while(st.size() > 0){
-      result.add((Integer)st.pop());
+      result.add((PairDoubleInteger)st.pop());
     }
 
     return result;
