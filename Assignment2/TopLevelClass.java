@@ -32,6 +32,8 @@ public class TopLevelClass{
     new_shakespeare_index.loadLookupTable();
     System.out.println("====================== Loaded lookup tables ======================");
 
-
+    System.out.println("Avgdl: " + new_shakespeare_index.getAverageDocumentLength());
+    System.out.println("====================== Querying ======================");
+    new_shakespeare_index.getScores("the king queen royalty", 10);
   }
 }

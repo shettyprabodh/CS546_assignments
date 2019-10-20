@@ -5,7 +5,18 @@ import java.lang.*;
 public class RetrievalModel{
 
   // BM25 scoring
-  public static double bm25Score(int N, int ni, int tfi, int qfi, double k1, double k2, int dl, double avdl, double b){
+  public static double bm25Score(RetrievalModelParams params){
+    // Param extraction
+    int N = params.total_document_count;
+    int ni = params.ni;
+    int tfi = params.tf;
+    int qfi = params.qf;
+    double k1 = params.k1;
+    double k2 = params.k2;
+    int dl = params.current_document_length;
+    double avdl = params.average_document_length;
+    double b = params.b;
+
     double K = RetrievalModel.getK(k1, b, dl, avdl);
     double term1 = (double)(N-ni+0.5)/(double)(ni+0.5);
     double term2 = (double)((k1+1.0)*tfi)/(double)(K+tfi);

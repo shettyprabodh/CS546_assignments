@@ -383,13 +383,25 @@ public class InvertedList{
   // Get score corresponding to given term(i.e this InvertedList) and doc_id.
   // If doc_id doesn't exist return 0
   // Scoring: Count based
-  public Integer getDocumentWiseScore(int doc_id, RetrievalModel retrieval_model, String retrieval_model_name, RandomAccessFile reader){
+  public double getDocumentWiseScore(int doc_id, RetrievalModel retrieval_model, String retrieval_model_name, RetrievalModelParams params, RandomAccessFile reader){
     if(!this.arePostingsLoaded()){
       this.reconstructPostingsFromDisk(reader);
     }
-
+    double score = 0.0;
     DocumentPostings doc_postings = this.getPostingsListByDocID(doc_id);
-    return (doc_postings != null) ? doc_postings.getDocumentTermFrequency() : 0;
+
+    // Parameters for BM25
+    int tf = doc_postings.getPositionsSize();
+    int ni = this.getDocumentCount();
+
+    params.tf = tf;
+    params.ni = ni;
+
+    if(retrieval_model_name == "BM25"){
+      score = retrieval_model.bm25Score(params);
+    }
+
+    return score;
   }
 
   // term-at-a-time based querying

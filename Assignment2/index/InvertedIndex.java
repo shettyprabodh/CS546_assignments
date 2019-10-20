@@ -516,6 +516,35 @@ public class InvertedIndex{
     }
   }
 
+  public Integer getDocumentLength(int doc_id){
+    if(!this.is_doc_length_loaded){
+      this.loadDocLength();
+    }
+
+    int result = 0;
+    if(this.doc_length.containsKey(doc_id)){
+      result = (this.doc_length.get(doc_id));
+    }
+
+    return result;
+  }
+
+  public double getAverageDocumentLength(){
+    if(!this.is_doc_length_loaded){
+      this.loadDocLength();
+    }
+
+    long total_length = 0;
+    Set<Integer> doc_ids = this.doc_length.keySet();
+    int num_of_docs = doc_ids.size();
+
+    for(Integer doc_id:doc_ids){
+      total_length += (this.doc_length.get(doc_id));
+    }
+
+    return (double)total_length/(double)num_of_docs;
+  }
+
   public double getAverageSceneLength(){
     if(!this.is_scene_id_map_loaded){
       this.loadSceneIdMap();
@@ -640,13 +669,17 @@ public class InvertedIndex{
       this.loadDocLength();
     }
 
-    PriorityQueue<PairLongInteger> R = new PriorityQueue<PairLongInteger>();
+    PriorityQueue<PairDoubleInteger> R = new PriorityQueue<PairDoubleInteger>();
     String[] query_terms = this.tokenizer.splitOnSpaces(query);
 
     InvertedList.readCompressionByte(this.getReader());
 
+    double average_document_length = this.getAverageDocumentLength();
+    int total_document_count = this.getDocumentCount();
+
     for(int doc_id=0; doc_id<this.getLastDocID(); doc_id++){
-      long total_score = 0;
+      double total_score = 0.0;
+      int current_document_length = this.getDocumentLength(doc_id);
 
       for(String query_term: query_terms){
         InvertedList current_inverted_list = (this.index.containsKey(query_term) ? (this.index.get(query_term)) : null);
@@ -656,10 +689,23 @@ public class InvertedIndex{
           continue;
         }
 
-        total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.retrieval_model, this.retrieval_model_name, this.getReader());
+        int query_term_frequency = 0;
+        for(String term: query_terms){
+          if(term == query_term){
+            query_term_frequency++;
+          }
+        }
+
+        RetrievalModelParams retrieval_model_params = new RetrievalModelParams();
+        retrieval_model_params.average_document_length = average_document_length;
+        retrieval_model_params.total_document_count = total_document_count;
+        retrieval_model_params.current_document_length = current_document_length;
+        retrieval_model_params.qf = query_term_frequency;
+
+        total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.retrieval_model, this.retrieval_model_name, retrieval_model_params, this.getReader());
       }
 
-      R.add(new PairLongInteger(total_score, doc_id));
+      R.add(new PairDoubleInteger(total_score, doc_id));
 
       // Maintaining top result_size values
       while(R.size() > result_size){
@@ -671,7 +717,8 @@ public class InvertedIndex{
     Stack st = new Stack();
 
     while(R.size() > 0){
-      PairLongInteger temp = R.poll();
+      PairDoubleInteger temp = R.poll();
+      System.out.println(temp);
       st.push(new Integer(temp.getB()));
     }
 

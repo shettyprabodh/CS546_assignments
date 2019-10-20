@@ -15,7 +15,7 @@ public class DocumentPostings{
     this.document_term_frequency = 0;
   }
 
-  // Will be used while reading II from disk
+  // Will be used while reading from from disk
   DocumentPostings(int doc_id, ArrayList<Integer> positions){
     this.doc_id = doc_id;
     this.positions = positions;

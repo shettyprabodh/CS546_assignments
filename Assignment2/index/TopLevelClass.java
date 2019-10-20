@@ -1,46 +1,35 @@
-package index;
-
 import java.util.*;
+import index.*;
+import java.nio.*;
 
 public class TopLevelClass{
   public static void main(String[] args){
-    String file_name = "shakespeare-scenes.json";
+    String raw_file_name = "shakespeare-scenes.json";
 
-    Crawler document_crawler = new Crawler(file_name);
+    Crawler document_crawler = new Crawler(raw_file_name);
     document_crawler.parseJSON();
 
     System.out.println("====================== Parsing JSON done ======================");
+    String index_bin_name = "index.bin";
+    String lookup_table_name = "lookup_table.json";
+    String data_statistics_name = "data_statistics.json";
 
-    InvertedIndex shakespeare_index = new InvertedIndex(document_crawler.documents, "index.bin", "lookup_table.json", "data_statistics.json");
+    InvertedIndex shakespeare_index = new InvertedIndex(document_crawler.getAllDocuments(), index_bin_name, lookup_table_name, data_statistics_name, "BM25");
+
+    System.out.println("====================== Building indices ======================");
     shakespeare_index.createIndex();
+    System.out.println("====================== Indices Built ======================");
 
-    System.out.println("====================== Created Inverted Index ======================");
-    // System.out.println(shakespeare_index);
-
+    System.out.println("====================== Writing to disk ======================");
     shakespeare_index.write(true);
+    System.out.println("====================== Wrote to disk ======================");
 
-    System.out.println("====================== Wrote Inverted Index ======================");
-    // Assume "delete shakespeare_index" here
-    // shakespeare_index.read();
-    InvertedIndex new_shakespeare_index = new InvertedIndex("index.bin", "lookup_table.json", "data_statistics.json");
+    // Destroying current indices
+    shakespeare_index = null;
 
+    System.out.println("====================== Creating new indices with just lookup table ======================");
+    InvertedIndex new_shakespeare_index = new InvertedIndex(index_bin_name, lookup_table_name, data_statistics_name, "BM25");
     new_shakespeare_index.loadLookupTable();
-
-    System.out.println("====================== Lookup table loaded ======================");
-
-    // new_shakespeare_index.rebuildIndex();
-    //
-    // System.out.println("====================== Index rebuilt ======================");
-
-    // System.out.println(new_shakespeare_index);
-    System.out.println(Arrays.toString(new_shakespeare_index.getScores("the frolic cern", 10).toArray()));
-
-    System.out.println("====================== Querying done ======================");
-
-    System.out.println("DC: " + new_shakespeare_index.getDicesCoefficient("the", "noble"));
-
-    System.out.println("====================== Dice's coefficient done ======================");
-
-    System.out.println("Done");
+    System.out.println("====================== Loaded lookup tables ======================");
   }
 }
