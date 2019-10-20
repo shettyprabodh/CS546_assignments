@@ -432,6 +432,16 @@ public class InvertedList{
 
       score = retrieval_model.jelinikMercerScoring(params);
     }
+    else if(retrieval_model_name == "Dirichlet"){
+      int tf = (doc_postings != null) ? doc_postings.getDocumentTermFrequency() : 0;
+      long total_term_count = this.getTotalTermCount(reader);
+
+      params.tf = tf;
+      params.total_term_count = total_term_count;
+      params.mu = 1500;
+
+      score = retrieval_model.dirichletScoring(params);
+    }
 
     return score;
   }
