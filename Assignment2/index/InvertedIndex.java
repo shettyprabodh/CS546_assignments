@@ -749,6 +749,7 @@ public class InvertedIndex{
 
     double average_document_length = this.getAverageDocumentLength();
     int total_document_count = this.getDocumentCount();
+    Long total_word_count = this.getTotalWordCount();
 
     for(int doc_id=0; doc_id<this.getLastDocID(); doc_id++){
       double total_score = 0.0;
@@ -773,6 +774,7 @@ public class InvertedIndex{
         retrieval_model_params.average_document_length = average_document_length;
         retrieval_model_params.total_document_count = total_document_count;
         retrieval_model_params.current_document_length = current_document_length;
+        retrieval_model_params.total_word_count = total_word_count;
         retrieval_model_params.qf = query_term_frequency;
 
         total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.retrieval_model, this.retrieval_model_name, retrieval_model_params, this.getReader());

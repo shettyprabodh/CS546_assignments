@@ -37,7 +37,13 @@ public class RetrievalModel{
   }
 
   // Dirichlet scoring
-  public static double dirichletScoring(int tf, int dl, int c, int cl, double mu){
+  public static double dirichletScoring(RetrievalModelParams params){
+    int tf = params.tf;
+    int dl = params.current_document_length;
+    long c = params.total_term_count;
+    long cl = params.total_word_count;
+    double mu = params.mu;
+
     double foreground_score = (double)tf/(double)dl;
     double background_score = (double)c/(double)cl;
     double alpha = mu/(dl+mu);
@@ -46,7 +52,13 @@ public class RetrievalModel{
   }
 
   // Jelinik Mercer scoring
-  public static double jelinikMercerScoring(int tf, int dl, int c, int cl, double lambda){
+  public static double jelinikMercerScoring(RetrievalModelParams params){
+    int tf = params.tf;
+    int dl = params.current_document_length;
+    long c = params.total_term_count;
+    long cl = params.total_word_count;
+    double lambda = params.lambda;
+
     double foreground_score = (double)tf/(double)dl;
     double background_score = (double)c/(double)cl;
     double alpha = lambda;

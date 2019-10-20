@@ -380,6 +380,24 @@ public class InvertedList{
     return null;
   }
 
+  public long getTotalTermCount(RandomAccessFile reader){
+    if(!this.arePostingsLoaded()){
+      this.reconstructPostingsFromDisk(reader);
+    }
+
+    long total_term_count = 0;
+
+    if(this.postings == null){
+      return total_term_count;
+    }
+
+    for(int i=0; i<this.postings.size(); i++){
+      total_term_count += (long)this.postings.get(i).getPositionsSize();
+    }
+
+    return total_term_count;
+  }
+
   // Get score corresponding to given term(i.e this InvertedList) and doc_id.
   // If doc_id doesn't exist return 0
   // Scoring: Count based
@@ -390,20 +408,29 @@ public class InvertedList{
     double score = 0.0;
     DocumentPostings doc_postings = this.getPostingsListByDocID(doc_id);
 
-    // TODO: Need to handle background score here
-    if(doc_postings == null){
-      return score;
-    }
-
-    // Parameters for BM25
-    int tf = doc_postings.getDocumentTermFrequency();
-    int ni = this.getDocumentCount(reader);
-
-    params.tf = tf;
-    params.ni = ni;
-
     if(retrieval_model_name == "BM25"){
+      if(doc_postings == null){
+        return score;
+      }
+      int tf = doc_postings.getDocumentTermFrequency();
+      int ni = this.getDocumentCount(reader);
+      params.tf = tf;
+      params.ni = ni;
+      params.k1 = 1.2;
+      params.k2 = 700;
+      params.b = 0.75;
+
       score = retrieval_model.bm25Score(params);
+    }
+    else if(retrieval_model_name == "JelinikMercer"){
+      int tf = (doc_postings != null) ? doc_postings.getDocumentTermFrequency() : 0;
+      long total_term_count = this.getTotalTermCount(reader);
+
+      params.tf = tf;
+      params.total_term_count = total_term_count;
+      params.lambda = 0.1;
+
+      score = retrieval_model.jelinikMercerScoring(params);
     }
 
     return score;

@@ -14,7 +14,7 @@ public class TopLevelClass{
     String lookup_table_name = "lookup_table.json";
     String data_statistics_name = "data_statistics.json";
 
-    InvertedIndex shakespeare_index = new InvertedIndex(document_crawler.getAllDocuments(), index_bin_name, lookup_table_name, data_statistics_name, "BM25");
+    InvertedIndex shakespeare_index = new InvertedIndex(document_crawler.getAllDocuments(), index_bin_name, lookup_table_name, data_statistics_name, "JelinikMercer");
 
     System.out.println("====================== Building indices ======================");
     shakespeare_index.createIndex();
@@ -28,7 +28,7 @@ public class TopLevelClass{
     shakespeare_index = null;
 
     System.out.println("====================== Creating new indices with just lookup table ======================");
-    InvertedIndex new_shakespeare_index = new InvertedIndex(index_bin_name, lookup_table_name, data_statistics_name, "BM25");
+    InvertedIndex new_shakespeare_index = new InvertedIndex(index_bin_name, lookup_table_name, data_statistics_name, "JelinikMercer");
     new_shakespeare_index.loadLookupTable();
     System.out.println("====================== Loaded lookup tables ======================");
 
