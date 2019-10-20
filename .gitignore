@@ -1,3 +1,5 @@
 *.class
 *.json
 *.bin
+*.pdf
+*.jar

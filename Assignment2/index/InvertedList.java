@@ -383,7 +383,7 @@ public class InvertedList{
   // Get score corresponding to given term(i.e this InvertedList) and doc_id.
   // If doc_id doesn't exist return 0
   // Scoring: Count based
-  public Integer getDocumentWiseScore(int doc_id, RandomAccessFile reader){
+  public Integer getDocumentWiseScore(int doc_id, RetrievalModel retrieval_model, String retrieval_model_name, RandomAccessFile reader){
     if(!this.arePostingsLoaded()){
       this.reconstructPostingsFromDisk(reader);
     }

@@ -5,14 +5,14 @@ import java.nio.*;
 import java.io.*;
 import org.json.simple.*;
 import org.json.simple.parser.*;
-import retrieval_models.*;
 
 public class InvertedIndex{
   ArrayList<Document> raw_data = null;
   Hashtable<String, InvertedList> index = null;
-  BM25 RM = new BM25();
-  JelinikMercerModel JM = new JelinikMercerModel();
-  DirichletModel DM = new DirichletModel();
+
+  // Scoring models
+  String retrieval_model_name = null;
+  RetrievalModel retrieval_model = null;
 
   String index_file_name = null;
   String lookup_table_json_name = null;
@@ -41,34 +41,46 @@ public class InvertedIndex{
   RandomAccessFile writer = null;
   RandomAccessFile reader = null;
 
-  public InvertedIndex(ArrayList<Document> documents, String index_file_name, String lookup_table_json_name, String data_statistics_json_name){
+  public InvertedIndex(ArrayList<Document> documents, String index_file_name, String lookup_table_json_name, String data_statistics_json_name, String retrieval_model_name){
     this.raw_data = documents;
     this.index = new Hashtable<String, InvertedList>();
+
     this.index_file_name = index_file_name;
     this.lookup_table_json_name = lookup_table_json_name;
     this.data_statistics_json_name = data_statistics_json_name;
+
     this.tokenizer = new Tokenizer();
     this.is_lookup_table_loaded = false;
+
     this.are_data_statistics_loaded = false;
     this.term_statistics = new Hashtable<String, TermStatistics>();
     this.scene_id_map = new Hashtable<String, ArrayList<Integer>>();
     this.play_id_map = new Hashtable<String, ArrayList<Integer>>();
     this.doc_length = new Hashtable<Integer, Integer>();
+
+    this.retrieval_model_name = retrieval_model_name;
+    this.retrieval_model = new RetrievalModel();
   }
 
-  public InvertedIndex(String index_file_name, String lookup_table_json_name, String data_statistics_json_name){
+  public InvertedIndex(String index_file_name, String lookup_table_json_name, String data_statistics_json_name, String retrieval_model_name){
     this.raw_data = null;
     this.index = new Hashtable<String, InvertedList>();
+
     this.index_file_name = index_file_name;
     this.lookup_table_json_name = lookup_table_json_name;
     this.data_statistics_json_name = data_statistics_json_name;
+
     this.tokenizer = new Tokenizer();
     this.is_lookup_table_loaded = false;
+
     this.are_data_statistics_loaded = false;
     this.term_statistics = new Hashtable<String, TermStatistics>();
     this.scene_id_map = new Hashtable<String, ArrayList<Integer>>();
     this.play_id_map = new Hashtable<String, ArrayList<Integer>>();
     this.doc_length = new Hashtable<Integer, Integer>();
+
+    this.retrieval_model_name = retrieval_model_name;
+    this.retrieval_model = new RetrievalModel();
   }
 
   public int getLastDocID(){
@@ -644,7 +656,7 @@ public class InvertedIndex{
           continue;
         }
 
-        total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.getReader());
+        total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.retrieval_model, this.retrieval_model_name, this.getReader());
       }
 
       R.add(new PairLongInteger(total_score, doc_id));
