@@ -1,0 +1,8 @@
+Libraries:- Our index uses "json-simple" library for storing and loading various data structures
+
+Run the following commands inside /src folder
+For compiling:-
+javac -cp json-simple-1.1.1.jar:. index/*.java TopLevelClass.java
+
+To run:-
+java -cp json-simple-1.1.1.jar:. TopLevelClass
