@@ -1,4 +1,4 @@
-package index;
+package pre_processors;
 
 import java.io.FileReader;
 import java.io.File;

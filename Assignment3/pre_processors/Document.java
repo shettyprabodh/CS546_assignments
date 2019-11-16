@@ -1,13 +1,13 @@
-package index;
+package pre_processors;
 
 import java.util.Arrays;
 
 public class Document{
-  String play_id = "";
-  String scene_id = "";
-  String[] terms = null;
-  long scene_num = 0;
-  Integer doc_id = 0;
+  public String play_id = "";
+  public String scene_id = "";
+  public String[] terms = null;
+  public long scene_num = 0;
+  public Integer doc_id = 0;
 
   Document(String play_id, String scene_id, String[] tokenized_text, long scene_num, Integer doc_id){
     this.play_id = play_id;

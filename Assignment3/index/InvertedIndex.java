@@ -5,6 +5,7 @@ import java.nio.*;
 import java.io.*;
 import org.json.simple.*;
 import org.json.simple.parser.*;
+import pre_processors.*;
 
 public class InvertedIndex{
   ArrayList<Document> raw_data = null;
@@ -13,16 +14,15 @@ public class InvertedIndex{
   // Scoring models
   RetrievalModel retrieval_model = null;
 
-  String index_file_name = null;
-  String lookup_table_json_name = null;
-  String data_statistics_json_name = null;
+  String index_file_name = "index.bin";
+  String lookup_table_json_name = "lookup_table.json";
+  String data_statistics_json_name = "data_statistics.json";
   String scene_id_map_json_name = "scene_id_map.json";
   String play_id_map_json_name = "play_id_map.json";
   String doc_length_name = "doc_length.json";
   String term_count_name = "term_count.json";
   String doc_scene_id_map_name = "doc_scene_id.json";
 
-  Tokenizer tokenizer = null;
   private boolean is_lookup_table_loaded = false;
   private boolean are_data_statistics_loaded = false;
   private boolean is_scene_id_map_loaded = false;
@@ -34,7 +34,6 @@ public class InvertedIndex{
   // Data statistics
   private int last_doc_id = 0;
   private int document_count = 0;
-  // NOTE: TreeMap can be used here if we want to save space
   private Hashtable<String, TermStatistics> term_statistics = null;
   private Hashtable<String, ArrayList<Integer>> scene_id_map = null;
   private Hashtable<String, ArrayList<Integer>> play_id_map = null;
@@ -46,15 +45,10 @@ public class InvertedIndex{
   RandomAccessFile writer = null;
   RandomAccessFile reader = null;
 
-  public InvertedIndex(ArrayList<Document> documents, String index_file_name, String lookup_table_json_name, String data_statistics_json_name){
+  public InvertedIndex(ArrayList<Document> documents){
     this.raw_data = documents;
     this.index = new Hashtable<String, InvertedList>();
 
-    this.index_file_name = index_file_name;
-    this.lookup_table_json_name = lookup_table_json_name;
-    this.data_statistics_json_name = data_statistics_json_name;
-
-    this.tokenizer = new Tokenizer();
     this.is_lookup_table_loaded = false;
 
     this.are_data_statistics_loaded = false;
@@ -76,7 +70,6 @@ public class InvertedIndex{
     this.lookup_table_json_name = lookup_table_json_name;
     this.data_statistics_json_name = data_statistics_json_name;
 
-    this.tokenizer = new Tokenizer();
     this.is_lookup_table_loaded = false;
 
     this.are_data_statistics_loaded = false;
@@ -612,17 +605,6 @@ public class InvertedIndex{
     return this.are_data_statistics_loaded;
   }
 
-  // Builds whole index from disk. rebuildIndex and createIndex are the
-  // only two methods used to create whole index.
-  public void rebuildIndex(){
-    Set<String> terms = this.index.keySet();
-    InvertedList.readCompressionByte(this.getReader());
-    for(String term: terms){
-      InvertedList current_inverted_list = this.index.get(term);
-      current_inverted_list.reconstructPostingsFromDisk(this.getReader());
-    }
-  }
-
   public Integer getDocumentLength(int doc_id){
     if(!this.is_doc_length_loaded){
       this.loadDocLength();
@@ -652,119 +634,6 @@ public class InvertedIndex{
     return (double)total_length/(double)num_of_docs;
   }
 
-  public double getAverageSceneLength(){
-    if(!this.is_scene_id_map_loaded){
-      this.loadSceneIdMap();
-    }
-    if(!this.is_doc_length_loaded){
-      this.loadDocLength();
-    }
-
-    Set<String> scene_ids = (Set<String>)this.scene_id_map.keySet();
-    long total_length = 0;
-    for(String scene_id: scene_ids){
-      ArrayList<Integer> doc_ids = this.scene_id_map.get(scene_id);
-
-      for(Integer doc_id: doc_ids){
-        if(this.doc_length.containsKey(doc_id)){
-          total_length += (this.doc_length.get(doc_id));
-        }
-      }
-    }
-
-    return (double)total_length/(double)scene_ids.size();
-  }
-
-  public String getShortestScene(){
-    if(!this.is_scene_id_map_loaded){
-      this.loadSceneIdMap();
-    }
-    if(!this.is_doc_length_loaded){
-      this.loadDocLength();
-    }
-
-    Set<String> scene_ids = (Set<String>)this.scene_id_map.keySet();
-    int shortest_length = Integer.MAX_VALUE;
-    String shortest_scene = null;
-    for(String scene_id: scene_ids){
-      ArrayList<Integer> doc_ids = this.scene_id_map.get(scene_id);
-      int total_length = 0;
-
-      for(Integer doc_id: doc_ids){
-        if(this.doc_length.containsKey(doc_id)){
-          total_length += (this.doc_length.get(doc_id));
-        }
-      }
-
-      if(shortest_length > total_length){
-        shortest_length = total_length;
-        shortest_scene = scene_id;
-      }
-    }
-
-    return shortest_scene;
-  }
-
-  public String getLongestPlay(){
-    if(!this.is_play_id_map_loaded){
-      this.loadPlayIdMap();
-    }
-    if(!this.is_doc_length_loaded){
-      this.loadDocLength();
-    }
-
-    Set<String> play_ids = (Set<String>)this.play_id_map.keySet();
-    int longest_length = Integer.MIN_VALUE;
-    String longest_play = null;
-    for(String play_id: play_ids){
-      ArrayList<Integer> doc_ids = this.play_id_map.get(play_id);
-      int total_length = 0;
-
-      for(Integer doc_id: doc_ids){
-        if(this.doc_length.containsKey(doc_id)){
-          total_length += (this.doc_length.get(doc_id));
-        }
-      }
-
-      if(longest_length < total_length){
-        longest_length = total_length;
-        longest_play = play_id;
-      }
-    }
-
-    return longest_play;
-  }
-
-  public String getShortestPlay(){
-    if(!this.is_play_id_map_loaded){
-      this.loadPlayIdMap();
-    }
-    if(!this.is_doc_length_loaded){
-      this.loadDocLength();
-    }
-
-    Set<String> play_ids = (Set<String>)this.play_id_map.keySet();
-    int shortest_length = Integer.MAX_VALUE;
-    String shortest_play = null;
-    for(String play_id: play_ids){
-      ArrayList<Integer> doc_ids = this.play_id_map.get(play_id);
-      int total_length = 0;
-
-      for(Integer doc_id: doc_ids){
-        if(this.doc_length.containsKey(doc_id)){
-          total_length += (this.doc_length.get(doc_id));
-        }
-      }
-
-      if(shortest_length > total_length){
-        shortest_length = total_length;
-        shortest_play = play_id;
-      }
-    }
-
-    return shortest_play;
-  }
-
   public Long getTotalWordCount(){
     if(!this.is_term_count_loaded){
       this.loadTermCount();
@@ -782,78 +651,78 @@ public class InvertedIndex{
 
   // Assumes query has been stemmed
   // Returns an Arraylist(of size k) of doc_ids with descending scores
-  public ArrayList<PairDoubleInteger> getScores(String query, Integer result_size, String retrieval_model_name){
-    if(!this.isLookupTableLoaded()){
-      this.loadLookupTable();
-    }
-    if(!this.areDataStatisticsLoaded()){
-      this.loadDataStatistics();
-      this.loadDocLength();
-    }
-    if(!this.is_term_count_loaded){
-      this.loadTermCount();
-    }
-
-    PriorityQueue<PairDoubleInteger> R = new PriorityQueue<PairDoubleInteger>();
-    String[] query_terms = this.tokenizer.splitOnSpaces(query);
-
-    InvertedList.readCompressionByte(this.getReader());
-
-    double average_document_length = this.getAverageDocumentLength();
-    int total_document_count = this.getDocumentCount();
-    Long total_word_count = this.getTotalWordCount();
-
-    for(int doc_id=0; doc_id<this.getLastDocID(); doc_id++){
-      double total_score = 0.0;
-      int current_document_length = this.getDocumentLength(doc_id);
-
-      for(String query_term: query_terms){
-        InvertedList current_inverted_list = (this.index.containsKey(query_term) ? (this.index.get(query_term)) : null);
-
-        // query term is not indexed. Thus, a score of zero.
-        if(current_inverted_list == null){
-          continue;
-        }
-
-        int query_term_frequency = 0;
-        for(String term: query_terms){
-          if(term == query_term){
-            query_term_frequency++;
-          }
-        }
-
-        RetrievalModelParams retrieval_model_params = new RetrievalModelParams();
-        retrieval_model_params.average_document_length = average_document_length;
-        retrieval_model_params.total_document_count = total_document_count;
-        retrieval_model_params.current_document_length = current_document_length;
-        retrieval_model_params.total_word_count = total_word_count;
-        retrieval_model_params.qf = query_term_frequency;
-
-        total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.retrieval_model, retrieval_model_name, retrieval_model_params, this.getReader());
-      }
-
-      R.add(new PairDoubleInteger(total_score, doc_id));
-
-      // Maintaining top result_size values
-      while(R.size() > result_size){
-        R.poll();
-      }
-    }
-
-    ArrayList<PairDoubleInteger> result = new ArrayList<PairDoubleInteger>();
-    Stack st = new Stack();
-
-    while(R.size() > 0){
-      PairDoubleInteger temp = R.poll();
-      st.push(temp);
-    }
-
-    while(st.size() > 0){
-      result.add((PairDoubleInteger)st.pop());
-    }
-
-    return result;
-  }
+  // public ArrayList<PairDoubleInteger> getScores(String query, Integer result_size, String retrieval_model_name){
+  //   if(!this.isLookupTableLoaded()){
+  //     this.loadLookupTable();
+  //   }
+  //   if(!this.areDataStatisticsLoaded()){
+  //     this.loadDataStatistics();
+  //     this.loadDocLength();
+  //   }
+  //   if(!this.is_term_count_loaded){
+  //     this.loadTermCount();
+  //   }
+  //
+  //   PriorityQueue<PairDoubleInteger> R = new PriorityQueue<PairDoubleInteger>();
+  //   String[] query_terms = this.tokenizer.splitOnSpaces(query);
+  //
+  //   InvertedList.readCompressionByte(this.getReader());
+  //
+  //   double average_document_length = this.getAverageDocumentLength();
+  //   int total_document_count = this.getDocumentCount();
+  //   Long total_word_count = this.getTotalWordCount();
+  //
+  //   for(int doc_id=0; doc_id<this.getLastDocID(); doc_id++){
+  //     double total_score = 0.0;
+  //     int current_document_length = this.getDocumentLength(doc_id);
+  //
+  //     for(String query_term: query_terms){
+  //       InvertedList current_inverted_list = (this.index.containsKey(query_term) ? (this.index.get(query_term)) : null);
+  //
+  //       // query term is not indexed. Thus, a score of zero.
+  //       if(current_inverted_list == null){
+  //         continue;
+  //       }
+  //
+  //       int query_term_frequency = 0;
+  //       for(String term: query_terms){
+  //         if(term == query_term){
+  //           query_term_frequency++;
+  //         }
+  //       }
+  //
+  //       RetrievalModelParams retrieval_model_params = new RetrievalModelParams();
+  //       retrieval_model_params.average_document_length = average_document_length;
+  //       retrieval_model_params.total_document_count = total_document_count;
+  //       retrieval_model_params.current_document_length = current_document_length;
+  //       retrieval_model_params.total_word_count = total_word_count;
+  //       retrieval_model_params.qf = query_term_frequency;
+  //
+  //       total_score += current_inverted_list.getDocumentWiseScore(doc_id, this.retrieval_model, retrieval_model_name, retrieval_model_params, this.getReader());
+  //     }
+  //
+  //     R.add(new PairDoubleInteger(total_score, doc_id));
+  //
+  //     // Maintaining top result_size values
+  //     while(R.size() > result_size){
+  //       R.poll();
+  //     }
+  //   }
+  //
+  //   ArrayList<PairDoubleInteger> result = new ArrayList<PairDoubleInteger>();
+  //   Stack st = new Stack();
+  //
+  //   while(R.size() > 0){
+  //     PairDoubleInteger temp = R.poll();
+  //     st.push(temp);
+  //   }
+  //
+  //   while(st.size() > 0){
+  //     result.add((PairDoubleInteger)st.pop());
+  //   }
+  //
+  //   return result;
+  // }
 
   public double getDicesCoefficient(String a, String b){
     if(!this.isLookupTableLoaded()){
