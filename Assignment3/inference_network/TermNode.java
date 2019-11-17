@@ -2,6 +2,8 @@ package inference_network;
 
 import java.util.*;
 import index.*;
+import java.nio.*;
+import java.io.*;
 
 public class TermNode extends ProximityNode{
   String term;
@@ -14,22 +16,26 @@ public class TermNode extends ProximityNode{
     this.index = index;
   }
 
-  public score(int doc_id){
-    InvertedList current_inverted_list = (this.index.containsKey(query_term) ? (this.index.get(query_term)) : null);
-    RandomAccessFile reader = this.index.getReader();
+  public double score(int doc_id){
+    InvertedIndex index = this.index;
+
+    InvertedList current_inverted_list = index.getInvertedList(this.term);
+    RandomAccessFile reader = index.getReader();
     double score = 0.0;
+
+    InvertedList.readCompressionByte(reader);
 
     if(current_inverted_list == null){
       return score;
     }
 
-    if(current_inverted_list.arePostingsLoaded()){
+    if(!current_inverted_list.arePostingsLoaded()){
       current_inverted_list.reconstructPostingsFromDisk(reader);
     }
-    DocumentPostings doc_postings = this.getPostingsListByDocID(doc_id);
+    DocumentPostings doc_postings = current_inverted_list.getPostingsListByDocID(doc_id);
 
-    int dl = this.index.getDocumentLength(doc_id);
-    long cl = this.index.getTotalWordCount();
+    int dl = index.getDocumentLength(doc_id);
+    long cl = index.getTotalWordCount();
 
     int tf = (doc_postings != null) ? doc_postings.getDocumentTermFrequency() : 0;
     long c = current_inverted_list.getTotalTermCount(reader);

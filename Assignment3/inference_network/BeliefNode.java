@@ -1,6 +1,7 @@
 package inference_network;
 
 import index.*;
+import java.util.*;
 
 public class BeliefNode extends QueryNode{
   ArrayList<? extends QueryNode> children;
@@ -10,10 +11,10 @@ public class BeliefNode extends QueryNode{
   }
 
   public double score(int doc_id){
-    return;
+    return 0.0;
   }
 
-  public double hasMoreDocuments(){
-    return;
+  public boolean hasMoreDocuments(){
+    return false;
   }
 }

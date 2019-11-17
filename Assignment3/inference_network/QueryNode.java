@@ -2,15 +2,15 @@ package inference_network;
 
 public class QueryNode{
   double score(int doc_id){
-    return;
+    return 0.0;
   }
 
   boolean hasMore(){
-    return;
+    return false;
   }
 
   int getCurrentDocID(){
-    return;
+    return 0;
   }
 
   void skipTo(int doc_id){

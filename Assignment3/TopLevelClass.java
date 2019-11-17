@@ -1,5 +1,6 @@
 import java.util.*;
 import pre_processors.*;
+import inference_network.*;
 import index.*;
 import java.io.*;
 
@@ -24,19 +25,46 @@ public class TopLevelClass{
     System.out.println("====================== Writing to disk ======================");
     shakespeare_index.write(true);
     System.out.println("====================== Wrote to disk ======================");
-    //
-    // // Destroying current indices
-    // shakespeare_index = null;
-    //
-    // System.out.println("====================== Creating new indices with just lookup table ======================");
-    // InvertedIndex new_shakespeare_index = new InvertedIndex(index_bin_name, lookup_table_name, data_statistics_name);
-    // new_shakespeare_index.loadLookupTable();
-    // System.out.println("====================== Loaded lookup tables ======================");
+
+    // Destroying current indices
+    shakespeare_index = null;
+
+    System.out.println("====================== Creating new indices with just lookup table ======================");
+    InvertedIndex new_shakespeare_index = new InvertedIndex(index_bin_name, lookup_table_name, data_statistics_name);
+    new_shakespeare_index.loadLookupTable();
+    System.out.println("====================== Loaded lookup tables ======================");
+
+    String query = "the king queen royalty";
+
+    ArrayList<TermNode> children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
+    AndNode and_node = new AndNode(children);
+    InferenceNetwork network = new InferenceNetwork();
+
+    ArrayList<PairDoubleInteger> results = network.runQuery(and_node, 10, new_shakespeare_index.getLastDocID());
+
+    ArrayList<String> TREC_formatted_strings = new ArrayList<String>();
+    for(int j=1; j<=results.size(); j++){
+      String scene_id = new_shakespeare_index.getSceneIdFromDocId(results.get(j-1).getB());
+      TREC_formatted_strings.add(TopLevelClass.getTRECFormattedString(1, scene_id, j, results.get(j-1).getA(), "dirichletScoring"));
+    }
+
+    System.out.println("Results:- " + TREC_formatted_strings);
     //
     // System.out.println("Avgdl: " + new_shakespeare_index.getAverageDocumentLength());
     // System.out.println("Total word count: " + new_shakespeare_index.getTotalWordCount());
     // System.out.println("====================== Querying ======================");
 
+  }
+
+  public static ArrayList<TermNode> generateTermNodes(String query, InvertedIndex index){
+    String[] terms = query.split(" ");
+    ArrayList<TermNode> result = new ArrayList<TermNode>();
+
+    for(String term: terms){
+      result.add(new TermNode(term, index));
+    }
+
+    return result;
   }
 
   public static String getTRECFormattedString(int question_number, String scene_id, int rank, double score, String retrieval_model_name){

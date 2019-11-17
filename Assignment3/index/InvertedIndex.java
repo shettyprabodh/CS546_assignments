@@ -84,6 +84,11 @@ public class InvertedIndex{
   }
 
   public int getLastDocID(){
+    if(!this.areDataStatisticsLoaded()){
+      this.loadDataStatistics();
+      this.loadDocLength();
+    }
+
     return this.last_doc_id;
   }
 
@@ -396,7 +401,7 @@ public class InvertedIndex{
     }
   }
 
-  private RandomAccessFile getReader(){
+  public RandomAccessFile getReader(){
     this.setReader();
     return this.reader;
   }
@@ -647,6 +652,10 @@ public class InvertedIndex{
     }
 
     return total_word_count;
+  }
+
+  public InvertedList getInvertedList(String term){
+    return (this.index.containsKey(term) ? (this.index.get(term)) : null);
   }
 
   // Assumes query has been stemmed
