@@ -13,10 +13,8 @@ public class TermNode extends ProximityNode{
   int current_postings_id;
   int current_doc_id;
 
-  final static double mu = 1500.0;
-
-
   public TermNode(String term, InvertedIndex index){
+    super();
     this.term = term;
     this.index = index;
     this.inverted_list = index.getInvertedList(term);
@@ -26,12 +24,36 @@ public class TermNode extends ProximityNode{
   public void initialize(){
     RandomAccessFile reader = this.index.getReader();
     InvertedList.readCompressionByte(reader);
-    if(!this.inverted_list.arePostingsLoaded()){
-      this.inverted_list.reconstructPostingsFromDisk(this.index.getReader());
-    }
+    this.loadInvertedList();
 
     this.current_postings_id = 0;
     this.current_doc_id = this.inverted_list.postings.get(this.current_postings_id).getDocId();
+    // System.out.println("Term:- " + this.term);
+    // System.out.println("New IL:- " + this.getNewInvertedList());
+  }
+
+  public void loadInvertedList(){
+    if(!this.inverted_list.arePostingsLoaded()){
+      this.inverted_list.reconstructPostingsFromDisk(this.index.getReader());
+    }
+  }
+
+  public InvertedList getInvertedList(){
+    return this.inverted_list;
+  }
+
+  // Returns inverted list with postings in MultiPositionDocPostings format
+  public ArrayList<MultiPositionDocPostings> getNewInvertedList(){
+    ArrayList<MultiPositionDocPostings> result = new ArrayList<MultiPositionDocPostings>();
+    ArrayList<DocumentPostings> postings = this.inverted_list.getPostings();
+
+    for(int i=0; i<postings.size(); i++){
+      DocumentPostings current_posting = postings.get(i);
+      MultiPositionDocPostings temp = new MultiPositionDocPostings(current_posting.getDocId(), current_posting.getAllPositions());
+      result.add(temp);
+    }
+
+    return result;
   }
 
   public int nextCandidate(){

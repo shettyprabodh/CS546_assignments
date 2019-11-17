@@ -39,6 +39,10 @@ public class InvertedList{
     this.are_postings_loaded = false;
   }
 
+  public ArrayList<DocumentPostings> getPostings(){
+    return this.postings;
+  }
+
   public long getOffset(){
     return this.offset;
   }

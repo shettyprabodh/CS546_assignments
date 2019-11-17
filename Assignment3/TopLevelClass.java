@@ -34,17 +34,17 @@ public class TopLevelClass{
     new_shakespeare_index.loadLookupTable();
     System.out.println("====================== Loaded lookup tables ======================");
 
-    String query = "servant guard soldier";
+    String query = "to be or not to be";
 
     ArrayList<TermNode> children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
     ArrayList<Double> weights = new ArrayList<Double>();
     for(int i=0; i<children.size(); i++){
       weights.add(2.0);
     }
-    NotNode and_node = new NotNode(children);
+    UnorderedWindowNode and_node = new UnorderedWindowNode(children, 9, new_shakespeare_index);
     InferenceNetwork network = new InferenceNetwork();
 
-    ArrayList<PairDoubleInteger> results = network.runQuery(and_node, 10, new_shakespeare_index.getLastDocID());
+    ArrayList<PairDoubleInteger> results = network.runQuery(and_node, 6, new_shakespeare_index.getLastDocID());
 
     ArrayList<String> TREC_formatted_strings = new ArrayList<String>();
     for(int j=1; j<=results.size(); j++){
