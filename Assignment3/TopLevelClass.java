@@ -37,7 +37,11 @@ public class TopLevelClass{
     String query = "the king queen royalty";
 
     ArrayList<TermNode> children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
-    NotNode and_node = new NotNode(children);
+    ArrayList<Double> weights = new ArrayList<Double>();
+    for(int i=0; i<children.size(); i++){
+      weights.add(2.0);
+    }
+    WandNode and_node = new WandNode(children, weights);
     InferenceNetwork network = new InferenceNetwork();
 
     ArrayList<PairDoubleInteger> results = network.runQuery(and_node, 10, new_shakespeare_index.getLastDocID());
