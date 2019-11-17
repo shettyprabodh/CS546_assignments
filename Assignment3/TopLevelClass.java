@@ -41,7 +41,7 @@ public class TopLevelClass{
     for(int i=0; i<children.size(); i++){
       weights.add(2.0);
     }
-    WandNode and_node = new WandNode(children, weights);
+    WsumNode and_node = new WsumNode(children, weights);
     InferenceNetwork network = new InferenceNetwork();
 
     ArrayList<PairDoubleInteger> results = network.runQuery(and_node, 10, new_shakespeare_index.getLastDocID());
