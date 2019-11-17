@@ -17,6 +17,7 @@ public class InferenceNetwork{
         R.poll();
       }
 
+      // Bit hacky
       query_node.skipTo(current_doc_id+1);
     }
 
