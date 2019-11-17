@@ -5,17 +5,19 @@ import index.*;
 
 public class InferenceNetwork{
 
-  public static ArrayList<PairDoubleInteger> runQuery(QueryNode query_node, int k, int last_doc_id){
+  public ArrayList<PairDoubleInteger> runQuery(QueryNode query_node, int k, int last_doc_id){
     PriorityQueue<PairDoubleInteger> R = new PriorityQueue<PairDoubleInteger>();
 
-    for(int doc_id=0; doc_id<last_doc_id; doc_id++){
-      double score = query_node.score(doc_id);
-
-      R.add(new PairDoubleInteger(score, doc_id));
+    while(query_node.hasMore()){
+      int current_doc_id = query_node.nextCandidate();
+      double score = query_node.score(current_doc_id);
+      R.add(new PairDoubleInteger(score, current_doc_id));
 
       while(R.size() > k){
         R.poll();
       }
+
+      query_node.skipTo(current_doc_id+1);
     }
 
     ArrayList<PairDoubleInteger> result = new ArrayList<PairDoubleInteger>();

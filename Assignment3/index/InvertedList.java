@@ -8,7 +8,7 @@ import java.io.*;
 // Whenever the lookup table is loaded, except for
 // postings everything is loaded.
 public class InvertedList{
-  private ArrayList<DocumentPostings> postings = null;
+  public ArrayList<DocumentPostings> postings = null;
   private int current_postings_pointer = 0;
   private boolean are_postings_loaded = false;
 

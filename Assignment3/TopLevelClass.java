@@ -34,14 +34,14 @@ public class TopLevelClass{
     new_shakespeare_index.loadLookupTable();
     System.out.println("====================== Loaded lookup tables ======================");
 
-    String query = "the king queen royalty";
+    String query = "servant guard soldier";
 
     ArrayList<TermNode> children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
     ArrayList<Double> weights = new ArrayList<Double>();
     for(int i=0; i<children.size(); i++){
       weights.add(2.0);
     }
-    WsumNode and_node = new WsumNode(children, weights);
+    AndNode and_node = new AndNode(children);
     InferenceNetwork network = new InferenceNetwork();
 
     ArrayList<PairDoubleInteger> results = network.runQuery(and_node, 10, new_shakespeare_index.getLastDocID());

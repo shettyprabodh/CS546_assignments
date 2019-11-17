@@ -10,11 +10,7 @@ public class BeliefNode extends QueryNode{
     this.children = children;
   }
 
-  public double score(int doc_id){
-    return 0.0;
-  }
-
-  public boolean hasMoreDocuments(){
-    return false;
+  public void skipTo(int doc_id){
+    return;
   }
 }

@@ -1,19 +1,19 @@
 package inference_network;
 
 public class QueryNode{
-  double score(int doc_id){
+  public double score(int doc_id){
     return 0.0;
   }
 
-  boolean hasMore(){
-    return false;
+  public boolean hasMore(){
+    return true;
   }
 
-  int getCurrentDocID(){
+  public int nextCandidate(){
     return 0;
   }
 
-  void skipTo(int doc_id){
+  public void skipTo(int doc_id){
     return;
   }
 }
