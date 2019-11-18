@@ -13,7 +13,7 @@ public class OrderedWindowNode extends WindowNode{
     super(children, window_size, index);
     this.removeUnsortedPostingList();
     this.current_postings_id = 0;
-    this.current_doc_id = this.final_postings_list != null ? this.final_postings_list.get(current_postings_id).getDocId() : 0;
+    this.current_doc_id = (this.final_postings_list != null && this.final_postings_list.size() > 0) ? this.final_postings_list.get(current_postings_id).getDocId() : 0;
   }
 
   /*

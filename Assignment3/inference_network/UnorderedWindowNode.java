@@ -6,11 +6,13 @@ import java.nio.*;
 import java.io.*;
 
 public class UnorderedWindowNode extends WindowNode{
-  int current_postings_id = 0;
-  int current_doc_id = this.final_postings_list != null ? this.final_postings_list.get(current_postings_id).getDocId() : 0;
+  int current_postings_id;
+  int current_doc_id;
 
   public UnorderedWindowNode(ArrayList<TermNode> children, int window_size, InvertedIndex index){
     super(children, window_size, index);
+    this.current_postings_id = 0;
+    this.current_doc_id = (this.final_postings_list != null && this.final_postings_list.size() > 0) ? this.final_postings_list.get(this.current_postings_id).getDocId() : 0;
   }
 
   public int nextCandidate(){

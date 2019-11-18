@@ -70,6 +70,106 @@ public class TopLevelClass{
 
       TopLevelClass.writeTRECStringsToFile(outfile, TREC_formatted_strings);
     }
+    System.out.println("============================================= OW over =======================================================");
+
+    // Unordered
+    outfile = "uw.trecrun";
+    run_id = "pshetty-uw-dir-1500";
+    q_num = 0;
+    for(String query : queries){
+      q_num++;
+      children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
+      int window_size = 3*children.size();
+      query_node = new UnorderedWindowNode(children, window_size, new_shakespeare_index);
+      results = network.runQuery(query_node, 10, new_shakespeare_index.getLastDocID());
+      ArrayList<String> TREC_formatted_strings = new ArrayList<String>();
+      for(int j=1; j<=results.size(); j++){
+        String scene_id = new_shakespeare_index.getSceneIdFromDocId(results.get(j-1).getB());
+        TREC_formatted_strings.add(TopLevelClass.getTRECFormattedString(q_num, scene_id, j, results.get(j-1).getA(), run_id));
+      }
+
+      TopLevelClass.writeTRECStringsToFile(outfile, TREC_formatted_strings);
+    }
+
+    System.out.println("============================================= UW over =======================================================");
+
+    // Sum
+    outfile = "sum.trecrun";
+    run_id = "pshetty-sum-dir-1500";
+    q_num = 0;
+    for(String query : queries){
+      q_num++;
+      children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
+      query_node = new SumNode(children);
+      results = network.runQuery(query_node, 10, new_shakespeare_index.getLastDocID());
+      ArrayList<String> TREC_formatted_strings = new ArrayList<String>();
+      for(int j=1; j<=results.size(); j++){
+        String scene_id = new_shakespeare_index.getSceneIdFromDocId(results.get(j-1).getB());
+        TREC_formatted_strings.add(TopLevelClass.getTRECFormattedString(q_num, scene_id, j, results.get(j-1).getA(), run_id));
+      }
+
+      TopLevelClass.writeTRECStringsToFile(outfile, TREC_formatted_strings);
+    }
+
+    System.out.println("============================================= SUM over =======================================================");
+
+    // And
+    outfile = "and.trecrun";
+    run_id = "pshetty-and-dir-1500";
+    q_num = 0;
+    for(String query : queries){
+      q_num++;
+      children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
+      query_node = new AndNode(children);
+      results = network.runQuery(query_node, 10, new_shakespeare_index.getLastDocID());
+      ArrayList<String> TREC_formatted_strings = new ArrayList<String>();
+      for(int j=1; j<=results.size(); j++){
+        String scene_id = new_shakespeare_index.getSceneIdFromDocId(results.get(j-1).getB());
+        TREC_formatted_strings.add(TopLevelClass.getTRECFormattedString(q_num, scene_id, j, results.get(j-1).getA(), run_id));
+      }
+
+      TopLevelClass.writeTRECStringsToFile(outfile, TREC_formatted_strings);
+    }
+    System.out.println("============================================= AND over =======================================================");
+    // Or
+    outfile = "or.trecrun";
+    run_id = "pshetty-or-dir-1500";
+    q_num = 0;
+    for(String query : queries){
+      q_num++;
+      children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
+      query_node = new OrNode(children);
+      results = network.runQuery(query_node, 10, new_shakespeare_index.getLastDocID());
+      ArrayList<String> TREC_formatted_strings = new ArrayList<String>();
+      for(int j=1; j<=results.size(); j++){
+        String scene_id = new_shakespeare_index.getSceneIdFromDocId(results.get(j-1).getB());
+        TREC_formatted_strings.add(TopLevelClass.getTRECFormattedString(q_num, scene_id, j, results.get(j-1).getA(), run_id));
+      }
+
+      TopLevelClass.writeTRECStringsToFile(outfile, TREC_formatted_strings);
+    }
+
+    System.out.println("============================================= OR over =======================================================");
+
+    // Max
+    outfile = "max.trecrun";
+    run_id = "pshetty-max-dir-1500";
+    q_num = 0;
+    for(String query : queries){
+      q_num++;
+      children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
+      query_node = new MaxNode(children);
+      results = network.runQuery(query_node, 10, new_shakespeare_index.getLastDocID());
+      ArrayList<String> TREC_formatted_strings = new ArrayList<String>();
+      for(int j=1; j<=results.size(); j++){
+        String scene_id = new_shakespeare_index.getSceneIdFromDocId(results.get(j-1).getB());
+        TREC_formatted_strings.add(TopLevelClass.getTRECFormattedString(q_num, scene_id, j, results.get(j-1).getA(), run_id));
+      }
+
+      TopLevelClass.writeTRECStringsToFile(outfile, TREC_formatted_strings);
+    }
+
+    System.out.println("============================================= MAX over =======================================================");
   }
 
   public static ArrayList<TermNode> generateTermNodes(String query, InvertedIndex index){
