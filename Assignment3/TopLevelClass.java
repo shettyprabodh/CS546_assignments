@@ -41,7 +41,7 @@ public class TopLevelClass{
     for(int i=0; i<children.size(); i++){
       weights.add(2.0);
     }
-    UnorderedWindowNode and_node = new UnorderedWindowNode(children, 9, new_shakespeare_index);
+    BooleanAndNode and_node = new BooleanAndNode(children, new_shakespeare_index);
     InferenceNetwork network = new InferenceNetwork();
 
     ArrayList<PairDoubleInteger> results = network.runQuery(and_node, 6, new_shakespeare_index.getLastDocID());
