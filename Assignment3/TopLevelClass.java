@@ -34,35 +34,42 @@ public class TopLevelClass{
     new_shakespeare_index.loadLookupTable();
     System.out.println("====================== Loaded lookup tables ======================");
 
-    String query = "to be or not to be";
-
-    ArrayList<TermNode> children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
-    ArrayList<Double> weights = new ArrayList<Double>();
-    for(int i=0; i<children.size(); i++){
-      weights.add(2.0);
-    }
-    BooleanAndNode and_node = new BooleanAndNode(children, new_shakespeare_index);
-    ArrayList<Integer> filter_doc_ids = new ArrayList<Integer>();
-    filter_doc_ids.add(0);
-    filter_doc_ids.add(1);
-    filter_doc_ids.add(2);
-    FilterRejectNode req_node = new FilterRejectNode(and_node, filter_doc_ids);
+    String[] queries = new String[]{"the king queen royalty",
+                                    "servant guard soldier",
+                                    "hope dream sleep",
+                                    "ghost spirit",
+                                    "fool jester player",
+                                    "to be or not to be",
+                                    "alas",
+                                    "alas poor",
+                                    "alas poor yorick",
+                                    "antony strumpet"};
+    ArrayList<TermNode> children;
+    String outfile;
+    String run_id;
+    int q_num;
+    QueryNode query_node;
+    ArrayList<PairDoubleInteger> results;
     InferenceNetwork network = new InferenceNetwork();
 
-    ArrayList<PairDoubleInteger> results = network.runQuery(req_node, 10, new_shakespeare_index.getLastDocID());
+    // Ordered
+    outfile = "ow.trecrun";
+    run_id = "pshetty-ow-dir-1500";
+    q_num = 0;
+    for(String query : queries){
+      q_num++;
+      children = TopLevelClass.generateTermNodes(query, new_shakespeare_index);
+      int window_size = children.size();
+      query_node = new OrderedWindowNode(children, window_size, new_shakespeare_index);
+      results = network.runQuery(query_node, 10, new_shakespeare_index.getLastDocID());
+      ArrayList<String> TREC_formatted_strings = new ArrayList<String>();
+      for(int j=1; j<=results.size(); j++){
+        String scene_id = new_shakespeare_index.getSceneIdFromDocId(results.get(j-1).getB());
+        TREC_formatted_strings.add(TopLevelClass.getTRECFormattedString(q_num, scene_id, j, results.get(j-1).getA(), run_id));
+      }
 
-    ArrayList<String> TREC_formatted_strings = new ArrayList<String>();
-    for(int j=1; j<=results.size(); j++){
-      String scene_id = new_shakespeare_index.getSceneIdFromDocId(results.get(j-1).getB());
-      TREC_formatted_strings.add(TopLevelClass.getTRECFormattedString(1, scene_id, j, results.get(j-1).getA(), "dirichletScoring"));
+      TopLevelClass.writeTRECStringsToFile(outfile, TREC_formatted_strings);
     }
-
-    System.out.println("Results:- " + TREC_formatted_strings);
-    //
-    // System.out.println("Avgdl: " + new_shakespeare_index.getAverageDocumentLength());
-    // System.out.println("Total word count: " + new_shakespeare_index.getTotalWordCount());
-    // System.out.println("====================== Querying ======================");
-
   }
 
   public static ArrayList<TermNode> generateTermNodes(String query, InvertedIndex index){
@@ -76,7 +83,7 @@ public class TopLevelClass{
     return result;
   }
 
-  public static String getTRECFormattedString(int question_number, String scene_id, int rank, double score, String retrieval_model_name){
+  public static String getTRECFormattedString(int question_number, String scene_id, int rank, double score, String run_id){
     String result = "";
 
     result += "Q" + question_number + " ";
@@ -84,31 +91,13 @@ public class TopLevelClass{
     result += scene_id + " ";
     result += rank + " ";
     result += score + " ";
-
-    if(retrieval_model_name == "BM25")
-      result += "pshetty-bm25-1.2-700-0.75";
-    else if(retrieval_model_name == "JelinikMercer"){
-      result += "pshetty-ql-jm-0.1";
-    }
-    else if(retrieval_model_name == "Dirichlet"){
-      result += "pshetty-ql-dir-1500";
-    }
-    else{
-      // Default retrieval model is count based
-      result += "pshetty-count";
-    }
+    result += run_id;
 
     return result;
   }
 
-  public static void writeTRECStringsToFile(String file_name, ArrayList<String> TREC_formatted_strings, String[] queries){
-    try(FileWriter file = new FileWriter(file_name)){
-      file.write("Queries:\n");
-      for(int i=0; i<queries.length; i++){
-        file.write(queries[i]+"\n");
-      }
-
-      file.write("Results:\n");
+  public static void writeTRECStringsToFile(String file_name, ArrayList<String> TREC_formatted_strings){
+    try(FileWriter file = new FileWriter(file_name, true)){
       for(int i=0; i<TREC_formatted_strings.size(); i++){
         file.write(TREC_formatted_strings.get(i) + "\n");
       }

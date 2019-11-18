@@ -34,9 +34,6 @@ public class WindowNode extends ProximityNode{
     InvertedList.readCompressionByte(reader);
     this.loadInvertedList();
     this.constructPostingList();
-
-    System.out.println("Final postings list:- ");
-    System.out.println(this.final_postings_list);
   }
 
   public void constructPostingList(){
@@ -133,7 +130,7 @@ public class WindowNode extends ProximityNode{
     int lower_bound = Math.min(min_1, min_2);
     int upper_bound = Math.max(max_1, max_2);
 
-    boolean inside_window = (Math.abs(upper_bound - lower_bound) + 1 < window_size);
+    boolean inside_window = (Math.abs(upper_bound - lower_bound) + 1 <= window_size);
 
     ArrayList<Integer> common = new ArrayList<Integer>(positions_1);
     common.retainAll(positions_2);
