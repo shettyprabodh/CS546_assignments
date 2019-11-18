@@ -141,4 +141,32 @@ public class WindowNode extends ProximityNode{
 
     return (inside_window && (!double_dipping));
   }
+
+  public MultiPositionDocPostings getPostingsListByDocID(int doc_id){
+    if(this.final_postings_list == null){
+      return null;
+    }
+
+    for(int i=0; i<this.final_postings_list.size(); i++){
+      MultiPositionDocPostings current_list = this.final_postings_list.get(i);
+      if(current_list.getDocId() == doc_id){
+        return current_list;
+      }
+    }
+
+    return null;
+  }
+
+  public long getTotalWindowCount(){
+    long total_window_count = 0;
+    if(this.final_postings_list == null){
+      return total_window_count;
+    }
+
+    for(int i=0; i<this.final_postings_list.size(); i++){
+      total_window_count += (long)this.final_postings_list.get(i).getWindowFrequency();
+    }
+
+    return total_window_count;
+  }
 }

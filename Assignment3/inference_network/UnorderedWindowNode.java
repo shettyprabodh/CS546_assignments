@@ -29,6 +29,22 @@ public class UnorderedWindowNode extends WindowNode{
   }
 
   public double score(int doc_id){
-    return 1.0;
+    int dl = index.getDocumentLength(doc_id) - this.window_size + 1;
+    long cl = index.getTotalWordCount() - (long)(this.window_size - 1)*(this.index.getDocumentCount());
+
+    MultiPositionDocPostings doc_postings = this.getPostingsListByDocID(doc_id);
+
+    int tf = (doc_postings != null) ? doc_postings.getWindowFrequency() : 0;
+    long c = this.getTotalWindowCount();
+
+    double score = 0.0;
+
+    double mu = UnorderedWindowNode.mu;
+
+    double num = (double)tf + mu*((double)c/(double)cl);
+    double den = (double)dl + (double)mu;
+
+    return Math.log(num/den);
+
   }
 }

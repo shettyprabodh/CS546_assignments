@@ -46,13 +46,9 @@ public class MultiPositionDocPostings{
     return this.positions;
   }
 
-  // public MultiPositionDocPostings concatenate(MultiPositionDocPostings other){
-  //   assert(this.doc_id == other.getDocId());
-  //   ArrayList< ArrayList<Integer> > concatenated_list = this.getPositions();
-  //   concatenated_list.addAll(other.getPositions());
-  //
-  //   return new MultiPositionDocPostings(this.doc_id, concatenated_list);
-  // }
+  public int getWindowFrequency(){
+    return this.positions.size();
+  }
 
   @Override
   public String toString(){
