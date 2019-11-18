@@ -11,7 +11,11 @@ public class InferenceNetwork{
     while(query_node.hasMore()){
       int current_doc_id = query_node.nextCandidate();
       double score = query_node.score(current_doc_id);
-      R.add(new PairDoubleInteger(score, current_doc_id));
+
+      // Hacky way to score filter nodes
+      if(score != -Double.MAX_VALUE){
+        R.add(new PairDoubleInteger(score, current_doc_id));
+      }
 
       while(R.size() > k){
         R.poll();

@@ -42,9 +42,14 @@ public class TopLevelClass{
       weights.add(2.0);
     }
     BooleanAndNode and_node = new BooleanAndNode(children, new_shakespeare_index);
+    ArrayList<Integer> filter_doc_ids = new ArrayList<Integer>();
+    filter_doc_ids.add(0);
+    filter_doc_ids.add(1);
+    filter_doc_ids.add(2);
+    FilterRejectNode req_node = new FilterRejectNode(and_node, filter_doc_ids);
     InferenceNetwork network = new InferenceNetwork();
 
-    ArrayList<PairDoubleInteger> results = network.runQuery(and_node, 6, new_shakespeare_index.getLastDocID());
+    ArrayList<PairDoubleInteger> results = network.runQuery(req_node, 10, new_shakespeare_index.getLastDocID());
 
     ArrayList<String> TREC_formatted_strings = new ArrayList<String>();
     for(int j=1; j<=results.size(); j++){
