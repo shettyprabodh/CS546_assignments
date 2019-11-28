@@ -10,6 +10,7 @@ import pre_processors.*;
 public class InvertedIndex{
   ArrayList<Document> raw_data = null;
   Hashtable<String, InvertedList> index = null;
+  DocumentVectorMap doc_vec_map;
 
   // Scoring models
   RetrievalModel retrieval_model = null;
@@ -48,6 +49,7 @@ public class InvertedIndex{
   public InvertedIndex(ArrayList<Document> documents){
     this.raw_data = documents;
     this.index = new Hashtable<String, InvertedList>();
+    this.doc_vec_map = new DocumentVectorMap();
 
     this.is_lookup_table_loaded = false;
 
@@ -65,6 +67,7 @@ public class InvertedIndex{
   public InvertedIndex(String index_file_name, String lookup_table_json_name, String data_statistics_json_name){
     this.raw_data = null;
     this.index = new Hashtable<String, InvertedList>();
+    this.doc_vec_map = new DocumentVectorMap();
 
     this.index_file_name = index_file_name;
     this.lookup_table_json_name = lookup_table_json_name;
@@ -102,6 +105,10 @@ public class InvertedIndex{
     }
 
     return this.index.keySet();
+  }
+
+  public DocumentVectorMap getDocumentVectorMap(){
+    return this.doc_vec_map;
   }
 
   public void createIndex(){
@@ -168,6 +175,9 @@ public class InvertedIndex{
 
         // Add posting
         correct_inverted_list.addPosting(current_doc.doc_id, term_position);
+
+        // Add to document vector
+        this.doc_vec_map.addWord(current_doc.doc_id, current_term);
       }
     }
 
@@ -386,6 +396,7 @@ public class InvertedIndex{
     this.flushDocLength();
     this.flushTermCount();
     this.flushDocScenenIdMap();
+    this.doc_vec_map.write();
   }
 
 
