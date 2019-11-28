@@ -6,19 +6,30 @@ import org.json.simple.parser.*;
 import java.io.*;
 
 public class DocumentVectorMap{
-  Hashtable<Integer, DocumentVector> document_vector_map;
-  Integer no_of_docs;
+  private Hashtable<Integer, DocumentVector> document_vector_map;
+  private Integer no_of_docs;
+  private boolean loaded;
+
   static String file_name = "doc_vec_map.json";
 
   public DocumentVectorMap(){
     this.document_vector_map = new Hashtable<Integer, DocumentVector>();
     this.no_of_docs = 0;
+    this.loaded = false;
   }
 
-  // TODO: Directly parse JSONObject to Vector map
-  // public DocumentVectorMap(){
-  //
-  // }
+  public boolean isLoaded(){
+    return this.loaded;
+  }
+
+  public String getFileName(){
+    return this.file_name;
+  }
+
+  public DocumentVector getDocumentVector(Integer doc_id){
+    return this.document_vector_map.get(doc_id);
+  }
+
 
   public void addDocument(Integer doc_id){
     if(this.document_vector_map.containsKey(doc_id)){
@@ -28,6 +39,7 @@ public class DocumentVectorMap{
 
     this.document_vector_map.put(doc_id, new DocumentVector());
     this.no_of_docs++;
+    this.loaded = true;
   }
 
   public void addWord(Integer doc_id, String word){
@@ -39,15 +51,36 @@ public class DocumentVectorMap{
     current_doc_vec.addWord(word);
   }
 
-  public String getFileName(){
-    return this.file_name;
-  }
-
   public void convertToTfIdfScore(Hashtable<String, Integer> doc_count_map){
     Set<Integer> doc_ids = this.document_vector_map.keySet();
 
     for(Integer doc_id: doc_ids){
       this.document_vector_map.get(doc_id).convertToTfIdfScore(doc_count_map, this.no_of_docs);
+    }
+  }
+
+
+
+  public void read(){
+    try{
+      FileReader file = new FileReader(this.getFileName());
+      JSONParser parser = new JSONParser();
+      JSONObject term_count_map = (JSONObject) parser.parse(file);
+
+      Set<String> doc_ids = term_count_map.keySet();
+
+      for(String doc_id: doc_ids){
+        DocumentVector doc_vec = new DocumentVector((JSONObject)term_count_map.get(doc_id));
+        this.document_vector_map.put(Integer.parseInt(doc_id), doc_vec);
+      }
+
+      this.loaded = true;
+    }
+    catch(ParseException e){
+      System.out.println(e);
+    }
+    catch(IOException e){
+      System.out.println(e);
     }
   }
 

@@ -11,6 +11,16 @@ public class DocumentVector{
     this.count_map = new Hashtable<String, Double>();
   }
 
+  public DocumentVector(JSONObject json_doc_vec){
+    this();
+
+    Set<String> words = json_doc_vec.keySet();
+
+    for(String word: words){
+      this.count_map.put(word, (Double)json_doc_vec.get(word));
+    }
+  }
+
   public void addWord(String word){
     Double current_word_count = 0.0;
     if(this.count_map.containsKey(word)){
@@ -40,6 +50,7 @@ public class DocumentVector{
     return 1.0;
   }
 
+
   public JSONObject getJSON(){
     JSONObject converted_object = new JSONObject();
     Set<String> words = this.count_map.keySet();
@@ -51,5 +62,12 @@ public class DocumentVector{
     }
 
     return converted_object;
+  }
+
+  @Override
+  public String toString(){
+    String result = "";
+    result += "\n{doc_vec: " + count_map + "}";
+    return result;
   }
 }

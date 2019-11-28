@@ -32,6 +32,9 @@ public class TopLevelClass{
     System.out.println("====================== Creating new indices with just lookup table ======================");
     InvertedIndex new_shakespeare_index = new InvertedIndex(index_bin_name, lookup_table_name, data_statistics_name);
     new_shakespeare_index.loadLookupTable();
+
+    DocumentVectorMap doc_vec_map = new_shakespeare_index.getDocumentVectorMap();
+    System.out.println("doc_vec for doc_id = 0:- " + doc_vec_map.getDocumentVector(0));
     System.out.println("====================== Loaded lookup tables ======================");
 
   }

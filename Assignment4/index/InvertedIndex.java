@@ -108,6 +108,9 @@ public class InvertedIndex{
   }
 
   public DocumentVectorMap getDocumentVectorMap(){
+    if(!this.doc_vec_map.isLoaded()){
+      this.doc_vec_map.read();
+    }
     return this.doc_vec_map;
   }
 
