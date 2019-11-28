@@ -7,10 +7,12 @@ import java.io.*;
 
 public class DocumentVectorMap{
   Hashtable<Integer, DocumentVector> document_vector_map;
+  Integer no_of_docs;
   static String file_name = "doc_vec_map.json";
 
   public DocumentVectorMap(){
     this.document_vector_map = new Hashtable<Integer, DocumentVector>();
+    this.no_of_docs = 0;
   }
 
   // TODO: Directly parse JSONObject to Vector map
@@ -25,6 +27,7 @@ public class DocumentVectorMap{
     }
 
     this.document_vector_map.put(doc_id, new DocumentVector());
+    this.no_of_docs++;
   }
 
   public void addWord(Integer doc_id, String word){
@@ -38,6 +41,14 @@ public class DocumentVectorMap{
 
   public String getFileName(){
     return this.file_name;
+  }
+
+  public void convertToTfIdfScore(Hashtable<String, Integer> doc_count_map){
+    Set<Integer> doc_ids = this.document_vector_map.keySet();
+
+    for(Integer doc_id: doc_ids){
+      this.document_vector_map.get(doc_id).convertToTfIdfScore(doc_count_map, this.no_of_docs);
+    }
   }
 
   public void write(){

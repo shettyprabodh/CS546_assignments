@@ -184,6 +184,25 @@ public class InvertedIndex{
     // Technically, lookup table and statistics are loaded in memory after creating the index
     this.is_lookup_table_loaded = true;
     this.are_data_statistics_loaded = true;
+
+    this.doc_vec_map.convertToTfIdfScore(this.getDocCountMap());
+  }
+
+  /*
+    Returns a hash table storing count of documents that each term(key) is present in.
+    To be used in tf-idf scoring.
+  */
+  private Hashtable<String, Integer> getDocCountMap(){
+    Hashtable<String, Integer> doc_count_map = new Hashtable<String, Integer>();
+    Set<String> terms = this.index.keySet();
+
+    for(String term: terms){
+      InvertedList current_inverted_list = this.index.get(term);
+      Integer count = current_inverted_list.getDocumentCount(this.getReader());
+      doc_count_map.put(term, count);
+    }
+
+    return doc_count_map;
   }
 
   private void setWriter(){

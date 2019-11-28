@@ -23,8 +23,17 @@ public class DocumentVector{
     this.count_map.put(word, count);
   }
 
-  public void convertToTfIdfScore(Hashtable<String, Integer> inverse_document_frequency){
+  public void convertToTfIdfScore(Hashtable<String, Integer> doc_count_map, Integer N){
+    Set<String> words = this.count_map.keySet();
 
+    for(String word: words){
+      Double tf = this.count_map.get(word);
+      Double ni = doc_count_map.containsKey(word) ? doc_count_map.get(word).doubleValue() : 0.0;
+
+      Double idf = Math.log((N.doubleValue()+1.0)/(ni+0.5));
+
+      this.count_map.put(word, tf*idf);
+    }
   }
 
   public Double dot(DocumentVector other){
