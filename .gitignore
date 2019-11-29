@@ -3,3 +3,5 @@
 *.bin
 *.pdf
 *.jar
+*.out
+*.txt
