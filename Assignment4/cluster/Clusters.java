@@ -33,6 +33,7 @@ public class Clusters{
       DocumentVector doc_vec_to_be_scored = this.doc_vec_map.getDocumentVector(doc_id);
       Double best_score = Double.MIN_VALUE;
       Cluster best_cluster = null;
+      // System.out.println("Scoring doc:- " + doc_id);
       for(Cluster cluster: this.clusters){
         Double score = cluster.score(doc_vec_to_be_scored, doc_vec_map, this.linkage);
 

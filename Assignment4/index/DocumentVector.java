@@ -33,6 +33,10 @@ public class DocumentVector{
     this.count_map.put(word, count);
   }
 
+  public Set<String> getWords(){
+    return this.count_map.keySet();
+  }
+
   public Double getWordCount(String word){
     Double word_count = this.count_map.get(word);
 
@@ -45,7 +49,7 @@ public class DocumentVector{
   }
 
   public void convertToTfIdfScore(Hashtable<String, Integer> doc_count_map, Integer N){
-    Set<String> words = this.count_map.keySet();
+    Set<String> words = this.getWords();
 
     for(String word: words){
       Double tf = this.count_map.get(word);
@@ -59,7 +63,7 @@ public class DocumentVector{
 
   public Double getVectorLength(){
     Double length = 0.0;
-    Set<String> words = this.count_map.keySet();
+    Set<String> words = this.getWords();
 
     for(String word: words){
       Double word_score = this.count_map.get(word);
@@ -71,7 +75,7 @@ public class DocumentVector{
 
   public void normalize(){
     Double length = this.getVectorLength();
-    Set<String> words = this.count_map.keySet();
+    Set<String> words = this.getWords();
 
     for(String word: words){
       Double word_score = this.count_map.get(word);
@@ -84,7 +88,7 @@ public class DocumentVector{
     i.e convertToTfIdfScore and normalize has been called for by this and other.
   */
   public Double dot(DocumentVector other){
-    Set<String> words = this.count_map.keySet();
+    Set<String> words = this.getWords();
     Double final_score = 0.0;
 
     for(String word: words){
@@ -95,6 +99,42 @@ public class DocumentVector{
     }
 
     return final_score;
+  }
+
+  // Returns new DocumentVector with sum of this and other
+  public DocumentVector add(DocumentVector other){
+    Set<String> this_words = this.getWords();
+    Set<String> other_words = other.getWords();
+    DocumentVector final_vector = new DocumentVector();
+
+    for(String word: this_words){
+      Double word_score = this.getWordCount(word);
+
+      final_vector.setWordCount(word, word_score);
+    }
+
+    for(String word: other_words){
+      Double word_score = other.getWordCount(word);
+      Double final_word_score = final_vector.getWordCount(word);
+
+      final_vector.setWordCount(word, word_score + final_word_score);
+    }
+
+    return final_vector;
+  }
+
+  // Returns new DocumentVector multiplied by scale
+  public DocumentVector scale(Double scale){
+    DocumentVector final_vector = new DocumentVector();
+    Set<String> words = this.getWords();
+
+    for(String word: words){
+      Double word_score = this.getWordCount(word);
+
+      final_vector.setWordCount(word, word_score*scale);
+    }
+
+    return final_vector;
   }
 
 
