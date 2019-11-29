@@ -26,6 +26,10 @@ public class DocumentVectorMap{
     return this.file_name;
   }
 
+  public Set<Integer> getDocIds(){
+    return this.document_vector_map.keySet();
+  }
+
   public DocumentVector getDocumentVector(Integer doc_id){
     return this.document_vector_map.get(doc_id);
   }
@@ -56,6 +60,14 @@ public class DocumentVectorMap{
 
     for(Integer doc_id: doc_ids){
       this.document_vector_map.get(doc_id).convertToTfIdfScore(doc_count_map, this.no_of_docs);
+    }
+  }
+
+  public void normalize(){
+    Set<Integer> doc_ids = this.document_vector_map.keySet();
+
+    for(Integer doc_id: doc_ids){
+      this.document_vector_map.get(doc_id).normalize();
     }
   }
 

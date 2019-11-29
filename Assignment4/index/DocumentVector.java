@@ -33,6 +33,17 @@ public class DocumentVector{
     this.count_map.put(word, count);
   }
 
+  public Double getWordCount(String word){
+    Double word_count = this.count_map.get(word);
+
+    if(word_count != null){
+      return word_count;
+    }
+    else{
+      return 0.0;
+    }
+  }
+
   public void convertToTfIdfScore(Hashtable<String, Integer> doc_count_map, Integer N){
     Set<String> words = this.count_map.keySet();
 
@@ -46,8 +57,44 @@ public class DocumentVector{
     }
   }
 
+  public Double getVectorLength(){
+    Double length = 0.0;
+    Set<String> words = this.count_map.keySet();
+
+    for(String word: words){
+      Double word_score = this.count_map.get(word);
+      length += word_score*word_score;
+    }
+
+    return Math.sqrt(length);
+  }
+
+  public void normalize(){
+    Double length = this.getVectorLength();
+    Set<String> words = this.count_map.keySet();
+
+    for(String word: words){
+      Double word_score = this.count_map.get(word);
+      this.count_map.put(word, word_score/length);
+    }
+  }
+
+  /*
+    Assumes both this and other doc vecs are notmalized and uses tf-idf scoring.
+    i.e convertToTfIdfScore and normalize has been called for by this and other.
+  */
   public Double dot(DocumentVector other){
-    return 1.0;
+    Set<String> words = this.count_map.keySet();
+    Double final_score = 0.0;
+
+    for(String word: words){
+      Double this_score = this.count_map.get(word);
+      Double other_score = other.getWordCount(word);
+
+      final_score += this_score*other_score;
+    }
+
+    return final_score;
   }
 
 

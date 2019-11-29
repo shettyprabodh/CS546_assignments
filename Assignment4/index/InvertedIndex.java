@@ -189,6 +189,7 @@ public class InvertedIndex{
     this.are_data_statistics_loaded = true;
 
     this.doc_vec_map.convertToTfIdfScore(this.getDocCountMap());
+    this.doc_vec_map.normalize();
   }
 
   /*

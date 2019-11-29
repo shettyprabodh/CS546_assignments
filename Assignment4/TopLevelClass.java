@@ -31,7 +31,9 @@ public class TopLevelClass{
     // System.out.println("doc_vec for doc_id = 0:- " + doc_vec_map.getDocumentVector(0));
     System.out.println("====================== Loaded document vector map ======================");
 
-    MinLinkage min_linkage = new MinLinkage();
-    Clusters shakespeare_clusters = new Clusters(doc_vec_map, min_linkage);
+    SingleLinkage min_linkage = new SingleLinkage();
+    Clusters shakespeare_clusters = new Clusters(doc_vec_map, 0.5, min_linkage);
+    shakespeare_clusters.buildClusters();
+    shakespeare_clusters.writeToFile();
   }
 }
