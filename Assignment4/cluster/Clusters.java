@@ -58,6 +58,7 @@ public class Clusters{
 
     for(Cluster cluster: this.clusters){
       ArrayList<Integer> doc_ids = cluster.getDocIds();
+      // string_to_write += cluster.getId() + " " + doc_ids.size() + "\n";
       for(Integer doc_id: doc_ids){
         string_to_write += cluster.getId() + " " + doc_id + "\n";
       }

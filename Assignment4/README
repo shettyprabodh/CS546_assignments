@@ -2,10 +2,10 @@ Libraries needed:-
 json-simple
 
 Build:-
-javac -cp json-simple-1.1.1.jar:. index/*.java pre_processors/*.java inference_network/*.java TopLevelClass.java
+find . -name '*.java' > sources.txt; javac -cp json-simple-1.1.1.jar:. @sources.txt;
 
 Run:-
 java -cp json-simple-1.1.1.jar:. TopLevelClass
 
 
-For code review, start from TopLevelClass.java and most of the code for this project is written in inference_network folder.
+For code review, start from TopLevelClass.java and most of the code for this project is written in cluster folder.
