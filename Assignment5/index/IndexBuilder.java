@@ -15,10 +15,13 @@ import org.json.simple.parser.ParseException;
 import utilities.*;
 
 public class IndexBuilder {
-    private Map<Integer, String> sceneIdMap; 
+    private Map<Integer, String> sceneIdMap;
     private Map<Integer, String> playIdMap;
     private Map<String, PostingList> invertedLists;
     private Map<Integer, Integer> docLengths;
+    private Map<Integer, Double> uniformPrior;
+    private Map<Integer, Double> randomPrior;
+
 	private Compressors compression;
 
 	public IndexBuilder() {
@@ -26,6 +29,8 @@ public class IndexBuilder {
 	    playIdMap = new HashMap<Integer, String>();
 	    invertedLists = new HashMap<String, PostingList>();
 	    docLengths = new HashMap<Integer, Integer>();
+      uniformPrior = new HashMap<Integer, Double>();
+      randomPrior = new HashMap<Integer, Double>();
 
 	}
     private void parseFile(String filename) {
@@ -44,12 +49,12 @@ public class IndexBuilder {
                 sceneIdMap.put(docId, sceneId);
                 String playId = (String) scene.get("playId");
                 playIdMap.put(docId, playId);
-                
+
                 String text = (String) scene.get("text");
                 String[] words = text.split("\\s+");
                 //record the document length
                 docLengths.put(docId, words.length);
- 
+                
                 // iterate over the terms in the scene
                 for (int pos = 0; pos < words.length; pos++) {
                 	String word = words[pos];
@@ -57,12 +62,33 @@ public class IndexBuilder {
                 	invertedLists.get(word).add(docId, pos+1);
                  }
             }
+
+            generateUniformPrior();
+            generateRandomPrior();
         } catch (ParseException e) {
         	// actually do something when bad things happen...
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void generateUniformPrior(){
+      Set<Integer> doc_ids = docLengths.keySet();
+      Double log_prob = Math.log(1.0/doc_ids.size());
+      for(Integer doc_id: doc_ids){
+        uniformPrior.put(doc_id, log_prob);
+      }
+    }
+
+    private void generateRandomPrior(){
+      Set<Integer> doc_ids = docLengths.keySet();
+      Random rand = new Random(1024);
+      Double log_prob;
+      for(Integer doc_id: doc_ids){
+        log_prob = Math.log(rand.nextDouble());
+        randomPrior.put(doc_id, log_prob);
+      }
     }
 
     private void saveStringMap(String fileName, Map<Integer, String> map) {
@@ -117,6 +143,17 @@ public class IndexBuilder {
 
     }
 
+    private void saveDoubleMap(String fileName, Map<Integer, Double>map){
+      List<String> lines = new ArrayList<>();
+      map.forEach((k,v) -> lines.add(k + " " + v));
+      try {
+          Path file = Paths.get(fileName);
+          Files.write(file, lines, Charset.forName("UTF-8"));
+      }  catch (IOException e) {
+          e.printStackTrace();
+      }
+    }
+
     public void buildIndex(String sourcefile, boolean compress) {
     	this.compression = compress ? Compressors.VBYTE : Compressors.EMPTY;
     	String invFile = compress ? "invListCompressed" : "invList";
@@ -126,5 +163,8 @@ public class IndexBuilder {
         saveStringMap("playIds.txt", playIdMap);
         saveDocLengths("docLength.txt");
         saveInvertedLists("lookup.txt", invFile);
+
+        saveDoubleMap("uniform.prior", uniformPrior);
+        saveDoubleMap("random.prior", randomPrior);
     }
  }

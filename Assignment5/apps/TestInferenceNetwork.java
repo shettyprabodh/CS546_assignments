@@ -38,8 +38,8 @@ Q9: alas poor yorick
 Q10: antony strumpet
 
 Please run these queries using the two phrase operators, ordered window and unordered window.
-For ordered, use a distance of 1 (exact phrase), for unordered, use a window width 
-3*|Q| (three times the length of the query). Please run these queries with each of the 
+For ordered, use a distance of 1 (exact phrase), for unordered, use a window width
+3*|Q| (three times the length of the query). Please run these queries with each of the
 operators: SUM, AND, OR, and MAX. Use dirichlet smoothing with μ=1500 for all runs.
  */
 public class TestInferenceNetwork {
@@ -55,7 +55,7 @@ public class TestInferenceNetwork {
 		InferenceNetwork network = new InferenceNetwork();
 		QueryNode queryNode;
 		ArrayList<QueryNode> children;
-		
+
 		// read in the queries
 		String queryFile = args[2];
 		List<String> queries = new ArrayList<String>();
@@ -72,7 +72,7 @@ public class TestInferenceNetwork {
 		}
 		String outfile, runId, qId;
 		int qNum = 0;
-		
+
 		outfile = "od1.trecrun";
 		runId = "dafisher-od1-dir-1500";
 		for (String query : queries) {
@@ -80,51 +80,6 @@ public class TestInferenceNetwork {
 			// make each of the required query nodes and run the queries
 			children = genTermNodes(query, index, model);
 			queryNode = new OrderedWindow(1, children, index, model);
-			results = network.runQuery(queryNode, k);
-			qId = "Q" + qNum;
-			boolean append = qNum > 1;
-			try {
-				PrintWriter writer = new PrintWriter(new FileWriter(outfile, append));
-				printResults(results, index, writer, runId, qId);
-				writer.close();
-
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		}
-		
-		//unordered
-		outfile = "uw.trecrun";
-		runId = "dafisher-uw-dir-1500";
-		qNum = 0;
-		for (String query : queries) {
-			qNum++;
-			// make each of the required query nodes and run the queries
-			children = genTermNodes(query, index, model);
-			int winSize = 3 * children.size();
-			queryNode = new UnorderedWindow(winSize, children, index, model);
-			results = network.runQuery(queryNode, k);
-			qId = "Q" + qNum;
-			boolean append = qNum > 1;
-			try {
-				PrintWriter writer = new PrintWriter(new FileWriter(outfile, append));
-				printResults(results, index, writer, runId, qId);
-				writer.close();
-
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		}
-
-		// sum
-		outfile = "sum.trecrun";
-		runId = "dafisher-sum-dir-1500";
-		qNum = 0;
-		for (String query : queries) {
-			qNum++;
-			// make each of the required query nodes and run the queries
-			children = genTermNodes(query, index, model);
-			queryNode = new SumNode(children);
 			results = network.runQuery(queryNode, k);
 			qId = "Q" + qNum;
 			boolean append = qNum > 1;
@@ -182,36 +137,14 @@ public class TestInferenceNetwork {
 			}
 		}
 
-		// max
-		outfile = "max.trecrun";
-		runId = "dafisher-max-dir-1500";
-		qNum = 0;
-		for (String query : queries) {
-			qNum++;
-			// make each of the required query nodes and run the queries
-			children = genTermNodes(query, index, model);
-			queryNode = new MaxNode(children);
-			results = network.runQuery(queryNode, k);
-			qId = "Q" + qNum;
-			boolean append = qNum > 1;
-			try {
-				PrintWriter writer = new PrintWriter(new FileWriter(outfile, append));
-				printResults(results, index, writer, runId, qId);
-				writer.close();
-
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		}
-
 	}
 
-	private static void printResults(List<Entry<Integer, Double>> results, 
+	private static void printResults(List<Entry<Integer, Double>> results,
 			Index index, PrintWriter writer, String runId, String qId) {
 		int rank = 1;
 		for (Map.Entry<Integer, Double> entry : results) {
 			String sceneId = index.getDocName(entry.getKey());
-			String resultLine = qId + " skip " + sceneId + " " + rank + " " 
+			String resultLine = qId + " skip " + sceneId + " " + rank + " "
 					+ entry.getValue() + " " + runId;
 
 			writer.println(resultLine);
