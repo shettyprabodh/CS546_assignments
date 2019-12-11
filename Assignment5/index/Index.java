@@ -24,7 +24,7 @@ public interface Index {
      * @param term the word
      */
     public int getDocFreq(String term);
-    
+
 	/**
 	 * @return the size of the collection in terms
 	 */
@@ -38,19 +38,19 @@ public interface Index {
 	 * @return the size of the collection in documents
 	 */
 	public int getDocCount();
-	
+
 	/**
-	 * 
+	 *
 	 * @return the average length of a document in the collection
 	 */
 	public double getAverageDocLength();
-	
+
 	/**
-	 * 
+	 *
 	 * @return the set of terms in the vocabulary, unordered.
 	 */
 	public Set<String> getVocabulary();
-	
+
 	/**
 	 *  Load an index into memory to use.
 	 *  NB: this really ought not to have the parameter...
@@ -69,5 +69,11 @@ public interface Index {
 	 * @return the external document id associated with that number.
 	 */
 	public String getDocName(int key);
-	 
+
+	/**
+	 * @param docId document id
+	 * @param prior_name Currently either ("uniform", "random") prior distribution
+	 * @return Log probability of given docId
+	 */
+	public Double getPriorProbability(Integer docId, String prior_name);
 }

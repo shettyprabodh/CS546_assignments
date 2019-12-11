@@ -15,15 +15,16 @@ import index.InvertedIndex;
 import retrieval.AndNode;
 import retrieval.Dirichlet;
 import retrieval.InferenceNetwork;
-import retrieval.MaxNode;
-import retrieval.OrNode;
 import retrieval.OrderedWindow;
 import retrieval.ProximityNode;
 import retrieval.QueryNode;
 import retrieval.RetrievalModel;
-import retrieval.SumNode;
+import retrieval.OrNode;
 import retrieval.TermNode;
 import retrieval.UnorderedWindow;
+import retrieval.PriorNode;
+import retrieval.UniformPrior;
+import retrieval.RandomPrior;
 /*
  * *
 Q1: the king queen royalty
@@ -55,6 +56,7 @@ public class TestInferenceNetwork {
 		InferenceNetwork network = new InferenceNetwork();
 		QueryNode queryNode;
 		ArrayList<QueryNode> children;
+		PriorNode prior;
 
 		// read in the queries
 		String queryFile = args[2];
@@ -73,35 +75,17 @@ public class TestInferenceNetwork {
 		String outfile, runId, qId;
 		int qNum = 0;
 
-		outfile = "od1.trecrun";
-		runId = "dafisher-od1-dir-1500";
-		for (String query : queries) {
-			qNum++;
-			// make each of the required query nodes and run the queries
-			children = genTermNodes(query, index, model);
-			queryNode = new OrderedWindow(1, children, index, model);
-			results = network.runQuery(queryNode, k);
-			qId = "Q" + qNum;
-			boolean append = qNum > 1;
-			try {
-				PrintWriter writer = new PrintWriter(new FileWriter(outfile, append));
-				printResults(results, index, writer, runId, qId);
-				writer.close();
-
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		}
-
-		// and
-		outfile = "and.trecrun";
-		runId = "dafisher-and-dir-1500";
+		// Uniform
+		outfile = "uniform.trecrun";
+		runId = "pshetty-and-dir-1500";
 		qNum = 0;
 		for (String query : queries) {
 			qNum++;
 			// make each of the required query nodes and run the queries
 			children = genTermNodes(query, index, model);
-			queryNode = new AndNode(children);
+			System.out.println("Outside:- " + index);
+			prior = new UniformPrior(index);
+			queryNode = new AndNode(children, prior);
 			results = network.runQuery(queryNode, k);
 			qId = "Q" + qNum;
 			boolean append = qNum > 1;
@@ -115,15 +99,15 @@ public class TestInferenceNetwork {
 			}
 		}
 
-		// or
-		outfile = "or.trecrun";
-		runId = "dafisher-or-dir-1500";
+		outfile = "random.trecrun";
+		runId = "pshetty-and-dir-1500";
 		qNum = 0;
 		for (String query : queries) {
 			qNum++;
 			// make each of the required query nodes and run the queries
 			children = genTermNodes(query, index, model);
-			queryNode = new OrNode(children);
+			prior = new RandomPrior(index);
+			queryNode = new AndNode(children, prior);
 			results = network.runQuery(queryNode, k);
 			qId = "Q" + qNum;
 			boolean append = qNum > 1;
@@ -136,7 +120,6 @@ public class TestInferenceNetwork {
 				ex.printStackTrace();
 			}
 		}
-
 	}
 
 	private static void printResults(List<Entry<Integer, Double>> results,

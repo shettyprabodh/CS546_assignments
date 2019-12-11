@@ -8,12 +8,16 @@ public class AndNode extends BeliefNode {
 		super(c);
 	}
 
+	public AndNode(ArrayList<QueryNode> c, PriorNode p){
+		super(c,p);
+	}
+
 	@Override
 	public Double score(Integer docId) {
 		Double score = 0.0;
 		for(QueryNode child : children){
 			score += child.score(docId);
 		}
-		return score;
+		return score + priorScore(docId);
 	}
 }

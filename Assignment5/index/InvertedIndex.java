@@ -35,6 +35,8 @@ public class InvertedIndex implements Index {
     private Map<Integer, String> sceneIdMap = new HashMap<Integer, String>();
     private Map<Integer, String> playIdMap = new HashMap<Integer, String>();
     private Map<Integer, Integer> docLengths = new HashMap<Integer, Integer>();
+		private Map<Integer, Double> uniformPrior = new HashMap<Integer, Double>();
+		private Map<Integer, Double> randomPrior = new HashMap<Integer, Double>();
 	private Compressors compression;
 	private Map<String, LookUp> lookup = new HashMap<String, LookUp>(); // key = term
 
@@ -54,6 +56,8 @@ public class InvertedIndex implements Index {
         loadStringMap("playIds.txt", playIdMap);
         loadDocLengths("docLength.txt");
         loadLookUp("lookup.txt");
+				loadDoubleMap("uniform.prior", uniformPrior);
+				loadDoubleMap("random.prior", randomPrior);
 
     }
     private void loadStringMap(String fileName, Map<Integer, String> map) {
@@ -65,6 +69,22 @@ public class InvertedIndex implements Index {
             while((line = bufferedReader.readLine()) != null) {
                 String[] data = line.split("\\s+");
                 map.put(Integer.parseInt(data[0]), data[1]);
+            }
+            bufferedReader.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+		private void loadDoubleMap(String fileName, Map<Integer, Double> map) {
+        String line;
+        try {
+            FileReader fileReader = new FileReader(fileName);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+            while((line = bufferedReader.readLine()) != null) {
+                String[] data = line.split("\\s+");
+                map.put(Integer.parseInt(data[0]), Double.parseDouble(data[1]));
             }
             bufferedReader.close();
         } catch(IOException e) {
@@ -108,7 +128,7 @@ public class InvertedIndex implements Index {
                 int dtf = Integer.parseInt(data[3]);
                 int ctf = Integer.parseInt(data[4]);
                 LookUp look = new LookUp(offset, numBytes, dtf, ctf);
-                
+
                 lookup.put(term, look);
             }
             bufferedReader.close();
@@ -129,7 +149,7 @@ public class InvertedIndex implements Index {
             assert numRead == look.numBytes;
             Compression comp = CompressionFactory.getCompressor(compression);
             IntBuffer intBuffer = IntBuffer.allocate(buffer.length);
-            comp.decode(buffer, intBuffer);   
+            comp.decode(buffer, intBuffer);
             int[] data = new int[intBuffer.position()];
             intBuffer.rewind();
             intBuffer.get(data);
@@ -146,7 +166,18 @@ public class InvertedIndex implements Index {
         return lookup.keySet();
     }
 
- 
+		public Double getPriorProbability(Integer doc_id, String prior_name){
+			if(prior_name == "uniform"){
+				return uniformPrior.get(doc_id);
+			}
+			else if(prior_name == "random"){
+				return randomPrior.get(doc_id);
+			}
+			else{
+				return 0.0;
+			}
+		}
+
     /**
      * Get the document frequency of a word
      * @return number of documents containing the word
@@ -193,11 +224,11 @@ public class InvertedIndex implements Index {
     public long getCollectionSize() {
         return collectionSize;
     }
- 
+
     public String getPlay(int docId) {
         return playIdMap.get(docId);
     }
- 
+
     public String getScene(int docId) {
         return sceneIdMap.get(docId);
     }
@@ -212,7 +243,7 @@ public class InvertedIndex implements Index {
      * Does document at a time retrieval using raw counts for the model
      */
     public List<Map.Entry<Integer, Double>> retrieveQuery(String query, int k) {
-		PriorityQueue<Map.Entry<Integer, Double>> result = 
+		PriorityQueue<Map.Entry<Integer, Double>> result =
 				new PriorityQueue<>(Map.Entry.<Integer, Double>comparingByValue());
 		String [] queryTerms = query.split("\\s+");
 		PostingList[] lists = new PostingList[queryTerms.length];

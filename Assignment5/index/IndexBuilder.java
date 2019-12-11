@@ -54,7 +54,7 @@ public class IndexBuilder {
                 String[] words = text.split("\\s+");
                 //record the document length
                 docLengths.put(docId, words.length);
-                
+
                 // iterate over the terms in the scene
                 for (int pos = 0; pos < words.length; pos++) {
                 	String word = words[pos];
