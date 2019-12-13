@@ -75,7 +75,7 @@ public class TestInferenceNetwork {
 		int qNum = 0;
 
 		// Uniform
-		outfile = "uniform-temp.trecrun";
+		outfile = "uniform.trecrun";
 		runId = "pshetty-and-dir-1500";
 		qNum = 0;
 		for (String query : queries) {
@@ -98,7 +98,7 @@ public class TestInferenceNetwork {
 			}
 		}
 
-		outfile = "random-temp.trecrun";
+		outfile = "random.trecrun";
 		runId = "pshetty-and-dir-1500";
 		qNum = 0;
 		for (String query : queries) {
