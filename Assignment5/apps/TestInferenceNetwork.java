@@ -23,8 +23,7 @@ import retrieval.OrNode;
 import retrieval.TermNode;
 import retrieval.UnorderedWindow;
 import retrieval.PriorNode;
-import retrieval.UniformPrior;
-import retrieval.RandomPrior;
+
 /*
  * *
 Q1: the king queen royalty
@@ -76,7 +75,7 @@ public class TestInferenceNetwork {
 		int qNum = 0;
 
 		// Uniform
-		outfile = "uniform.trecrun";
+		outfile = "uniform-temp.trecrun";
 		runId = "pshetty-and-dir-1500";
 		qNum = 0;
 		for (String query : queries) {
@@ -84,7 +83,7 @@ public class TestInferenceNetwork {
 			// make each of the required query nodes and run the queries
 			children = genTermNodes(query, index, model);
 			System.out.println("Outside:- " + index);
-			prior = new UniformPrior(index);
+			prior = new PriorNode(index, "uniform");
 			queryNode = new AndNode(children, prior);
 			results = network.runQuery(queryNode, k);
 			qId = "Q" + qNum;
@@ -99,14 +98,14 @@ public class TestInferenceNetwork {
 			}
 		}
 
-		outfile = "random.trecrun";
+		outfile = "random-temp.trecrun";
 		runId = "pshetty-and-dir-1500";
 		qNum = 0;
 		for (String query : queries) {
 			qNum++;
 			// make each of the required query nodes and run the queries
 			children = genTermNodes(query, index, model);
-			prior = new RandomPrior(index);
+			prior = new PriorNode(index, "random");
 			queryNode = new AndNode(children, prior);
 			results = network.runQuery(queryNode, k);
 			qId = "Q" + qNum;
